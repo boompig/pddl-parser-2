@@ -133,7 +133,7 @@ class Formula(object):
 
         # 4) Forall objects should be outside of all but Oneof
         if not isinstance(self, Oneof) and \
-            any([isintance(child, Forall) for child in self.args]):
+            any([isinstance(child, Forall) for child in self.args]):
             assert False, \
                 "Forall object cannot be nested inside anything \
             except a Oneof object"
