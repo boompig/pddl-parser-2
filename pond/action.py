@@ -1,5 +1,5 @@
-from formula import Formula
-from predicate import Predicate
+from .formula import Formula
+from .predicate import Predicate
 
 class Action (object):
     """
@@ -61,8 +61,13 @@ class Action (object):
     def __hash__ (self):
         return hash (self._hash_string ())
 
-    def __cmp__ (self, a):
-        return cmp (self._hash_string (), a._hash_string())
+    def __cmp__(self, a):
+        if self._hash_string() < a._hash_string():
+            return -1
+        elif self._hash_string() == a.hash_string():
+            return 0
+        else:
+            return 1
 
     def __eq__ (self, a):
         return self.is_equal (a)

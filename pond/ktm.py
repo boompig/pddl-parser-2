@@ -1,6 +1,7 @@
 from . grounder import GroundProblem
 from . predicate import Predicate
-from . formula import And, Primitive
+from . formula import Primitive
+
 
 class Literal (object):
     """Thin wrapper around fluent (ground Predicate) object."""

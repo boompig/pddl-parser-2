@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from . formula import Formula, And, Primitive, Forall, When, Xor, Not, Oneof, Or
+from . formula import And, Primitive, Forall, When, Xor, Not, Oneof, Or
 from . action import Action
 from . predicate import Predicate
 from . pddl_tree import PDDL_Tree

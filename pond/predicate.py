@@ -76,7 +76,12 @@ class Predicate (object):
         return not (self == p)
 
     def __cmp__ (self, p):
-        return cmp(self._hash_string(), p._hash_string())
+        if self._hash_string() < p._hash_string():
+            return -1
+        elif self._hash_string() == p.hash_string():
+            return 0
+        else:
+            return 1
 
     def is_equal (self, p):
         """Return True iff two predicates are equal."""
@@ -99,7 +104,6 @@ class Predicate (object):
     def export (self, lvl=1, sp="  ", untyped=False):
         """Return a PDDL representation of this predicate, as a string."""
 
-        o = [] # list of output lines
         sep = ""
 
         if self.ground_args is None:
@@ -129,12 +133,13 @@ class Predicate (object):
         len(item) == 2 and isinstance (item[0], str) and isinstance (item[1], str) for item in it ]),\
         "first argument must be iterable, and be a sequence of tuples, which are pairs of strings"
 
-        it_var_names = set ([ item[0] for item in it ])
-        it_obj_names = set ([ item[1] for item in it ])
+        # it_var_names = set ([ item[0] for item in it ])
+        # it_obj_names = set ([ item[1] for item in it ])
 
-        self_var_names = set ([ arg[0] for arg in self.args ])
-        self_var_types = set ([ arg[1] for arg in self.args ])
+        # self_var_names = set ([ arg[0] for arg in self.args ])
+        # self_var_types = set ([ arg[1] for arg in self.args ])
         #TODO not fully implemented
+        raise NotImplementedError()
 
     def is_ground (self):
         """Return True iff args is empty."""

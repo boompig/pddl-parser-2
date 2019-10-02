@@ -1,14 +1,8 @@
-# my utility function
-from . utils import get_contents
-
-# related classes
-from . predicate import Predicate
-from . formula import *
-from . action import Action
+from .utils import get_contents
 
 # from stdlib
 import re
-from sys import stderr
+
 
 class PDDL_Tree (object):
     """
@@ -25,7 +19,7 @@ class PDDL_Tree (object):
 
         self.name = name
         self.children = []
-        
+
     def __getitem__ (self, k):
         """
             Allow retrieval of children based on name.

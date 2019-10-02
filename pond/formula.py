@@ -122,7 +122,6 @@ class Formula(object):
 
         # 3) Verify And object not nested under And object
         if isinstance(self, And):
-            i = 0
             queue = self.args[:]
             while len(queue) > 0:
                 arg = queue.pop()
