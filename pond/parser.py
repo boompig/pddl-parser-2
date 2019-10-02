@@ -1,9 +1,9 @@
 from collections import OrderedDict
-from formula import Formula, And, Primitive, Forall, When, Xor, Not, Oneof, Or
-from action import Action
-from predicate import Predicate
-from pddl_tree import PDDL_Tree
-from utils import PDDL_Utils
+from . formula import Formula, And, Primitive, Forall, When, Xor, Not, Oneof, Or
+from . action import Action
+from . predicate import Predicate
+from . pddl_tree import PDDL_Tree
+from . utils import PDDL_Utils
 
 
 class Problem(object):
@@ -19,7 +19,7 @@ class Problem(object):
 
         init: Formula object
 
-        goal: Set of ground Predicate objects
+        goal: Formula object for the goal (typically and And object)
 
         actions: List of action objects
 
@@ -56,8 +56,15 @@ class Problem(object):
         self.obj_to_type = {}
         self.type_to_obj = {}
 
-        # make sure that domain is parsed before the problem
-        self._parse_domain(domain_file)
+        if domain_file==None:
+            self.domain_name = None
+            self.types = None
+            self.parent_types = None
+            self.predicates = None
+            self.action = None
+        else:
+            # make sure that domain is parsed before the problem
+            self._parse_domain(domain_file)
 
         if problem_file is None:
             self.init = None
@@ -80,7 +87,7 @@ class Problem(object):
         """Return True iff this problem is the same as the given problem."""
         assert isinstance (p, Problem), "Must be comparing two of same type"
         if self.objects != p.objects:
-            print "objects"
+            print("objects")
             return False
 
         if self.init != p.init:
@@ -92,19 +99,19 @@ class Problem(object):
             return False
 
         if self.goal != p.goal:
-            print "goal"
+            print("goal")
             return False
 
         if not all ([sa == pa for sa, pa in zip (self.actions, p.actions)]):
-            print "actions"
+            print("actions")
             return False
 
         if not all ([sp == pp for sp, pp in zip (self.predicates, p.predicates)]):
-            print "predicates"
+            print("predicates")
             return False
 
         if self.types != p.types or self.parent_types != p.parent_types:
-            print "types"
+            print("types")
             return False
 
         return True
@@ -129,12 +136,14 @@ class Problem(object):
             fp.write (sp + "(:requirements :strips%s)\n" % NONDET)
 
         # types
-        s =  ('\n'+sp+'  ').join( "%s - %s" % (o,t) for o,t in self.parent_types.iteritems() )
-        fp.write (sp + "(:types %s)%s" %(s, "\n"))
+        if self.types!=None:
+            s =  ('\n'+sp+'  ').join( "%s - %s" % (o,t) for o,t in self.parent_types.items() )
+            fp.write (sp + "(:types %s)%s" %(s, "\n"))
 
         # constants
-        s = ('\n'+sp+'  ').join(["%s - %s" % (' '.join(self.const_unmap[t]), t) for t in self.const_unmap])
-        fp.write ("%s(:constants\n%s  %s\n%s)\n\n" % (sp, sp, s, sp))
+        if hasattr(self, 'const_unmap'):
+            s = ('\n'+sp+'  ').join(["%s - %s" % (' '.join(self.const_unmap[t]), t) for t in self.const_unmap])
+            fp.write ("%s(:constants\n%s  %s\n%s)\n\n" % (sp, sp, s, sp))
 
         # predicates
         fp.write (sp + "(:predicates " + "\n")
@@ -180,8 +189,7 @@ class Problem(object):
         # goal
         o = []
         o.append (sp + "(:goal")
-        for p in self.goal.args:
-            o.append (p.export (2, sp, True))
+        o.append (self.goal.export(2, sp, True))
         o.append (sp + ")") # close goal
         fp.write ("\n".join (o) + "\n")
 
@@ -192,12 +200,12 @@ class Problem(object):
 
         # write domain file
         sp = "    "
-        fp = open(f_domain, "w")
+        fp = open(f_domain, "w+")
         self._export_domain (fp, sp)
         fp.close()
 
         if self.init is not None:
-            fp = open (f_problem, "w")
+            fp = open (f_problem, "w+")
             self._export_problem (fp, sp)
             fp.close ()
 
@@ -221,24 +229,24 @@ class Problem(object):
         d["Obj -> Type Mapping"] = self.obj_to_type
         #d["Type -> Obj Mapping"] = self.type_to_obj
 
-        for k, v in d.iteritems():
-            print "*** %s ***" % k
+        for k, v in d.items():
+            print("*** %s ***" % k)
             if isinstance(v, dict):
                 if len(v) == 0:
-                    print "\t<no items>"
-                for k, val in v.iteritems():
-                    print "\t%s -> %s" % (k, str(val))
+                    print("\t<no items>")
+                for k, val in v.items():
+                    print("\t%s -> %s" % (k, str(val)))
             elif hasattr(v, '__iter__'):
                 if len(v) == 0:
-                    print "\tNone"
+                    print("\tNone")
                 elif k == "Actions":
                     for action in self.actions:
                         action.dump(lvl=1)
                 else:
-                    print "\t" + "\n\t".join([str(item) for item in v])
+                    print("\t" + "\n\t".join([str(item) for item in v]))
             else:
-                print "\t" + str(v)
-            print ""
+                print("\t" + str(v))
+            print("")
 
     def _parse_domain(self, f_domain):
         """

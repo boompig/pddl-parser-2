@@ -1,6 +1,6 @@
-from grounder import GroundProblem
-from predicate import Predicate
-from formula import And, Primitive
+from . grounder import GroundProblem
+from . predicate import Predicate
+from . formula import And, Primitive
 
 class Literal (object):
     """Thin wrapper around fluent (ground Predicate) object."""
@@ -67,18 +67,18 @@ def compile (problem, T, M, init_TL):
             fluents.append (k_notl)
             fluent_dict [hash(k_notl)] = k_notl
         
-    print "* New fluents *"
+    print("* New fluents *")
     for fluent in fluents:
-        print fluent
+        print(fluent)
 
     #TODO new initial state
 
-    print "* New goal state *"
+    print("* New goal state *")
     goal_fluents = []
     for arg in problem.goal.args:
         p = Primitive (conversion_dict[hash(arg.predicate)])
         goal_fluents.append (p)
-        print p
+        print(p)
 
     #TODO new action set
 
