@@ -1,40 +1,40 @@
 class Predicate(object):
     """
-        Simple data structure for the predicate objects.
+    Simple data structure for the predicate objects.
 
-        Attributes:
-            name: the predicate name (string)
+    Attributes:
+        name: the predicate name (string)
 
-            args: list of tuples that contain a pair of strings
-                * the first is the variable name
-                * the second is the variable type
+        args: list of tuples that contain a pair of strings
+            * the first is the variable name
+            * the second is the variable type
 
-            ground_args:    List of tuples that contain a pair of strings.
-                            The first is the object name and the second is the variable type.
+        ground_args:    List of tuples that contain a pair of strings.
+                        The first is the object name and the second is the variable type.
 
-        Methods:
-            is_ground:    Returns True when args is empty, and False otherwise.
+    Methods:
+        is_ground:    Returns True when args is empty, and False otherwise.
 
-            ground:    Takes in an iterable of tuples that contain a pair of strings.
-                       The first is a variable name and the second is an object name.
-                       It should throw an error if the variable type and the object type do not match.
-                       It should also throw an error if the set of variables passed in isn't a subset of the variables in args.
-                       The effect should be to remove the appropriate elements from the args list,
-                       and add the appropriate elements to the ground_args list.
+        ground:    Takes in an iterable of tuples that contain a pair of strings.
+                    The first is a variable name and the second is an object name.
+                    It should throw an error if the variable type and the object type do not match.
+                    It should also throw an error if the set of variables passed in isn't a subset of the variables in args.
+                    The effect should be to remove the appropriate elements from the args list,
+                    and add the appropriate elements to the ground_args list.
     """
 
     OBJECT = "default_object"
 
     def __init__(self, name, args, ground_args=None):
         """
-            Create a new predicate.
+        Create a new predicate.
 
-            Inputs:
-                name: the predicate name (string)
+        Inputs:
+            name: the predicate name (string)
 
-                args: list of tuples that contain a pair of strings
-                    * the first is the variable name
-                    * the second is the variable type
+            args: list of tuples that contain a pair of strings
+                * the first is the variable name
+                * the second is the variable type
         """
 
         assert isinstance(name, str), "Predicate name must be a string"

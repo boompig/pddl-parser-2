@@ -136,7 +136,7 @@ class Problem(object):
             fp.write(sp + "(:requirements :strips%s)\n" % NONDET)
 
         # types
-        if self.types != None:
+        if self.types is not None:
             s = ("\n" + sp + "  ").join(
                 "%s - %s" % (o, t) for o, t in self.parent_types.items()
             )
