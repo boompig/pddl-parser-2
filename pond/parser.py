@@ -1,9 +1,9 @@
 from collections import OrderedDict
-from . formula import And, Primitive, Forall, When, Xor, Not, Oneof, Or
-from . action import Action
-from . predicate import Predicate
-from . pddl_tree import PDDL_Tree
-from . utils import PDDL_Utils
+from .formula import And, Primitive, Forall, When, Xor, Not, Oneof, Or
+from .action import Action
+from .predicate import Predicate
+from .pddl_tree import PDDL_Tree
+from .utils import PDDL_Utils
 
 
 class Problem(object):
@@ -40,7 +40,7 @@ class Problem(object):
 
     OBJECT = "default_objec"
 
-    def __init__(self, domain_file, problem_file = None):
+    def __init__(self, domain_file, problem_file=None):
         """
         Create a new problem instance.
 
@@ -56,7 +56,7 @@ class Problem(object):
         self.obj_to_type = {}
         self.type_to_obj = {}
 
-        if domain_file==None:
+        if domain_file is None:
             self.domain_name = None
             self.types = None
             self.parent_types = None
@@ -73,40 +73,40 @@ class Problem(object):
         else:
             self._parse_problem(problem_file)
 
-    def __eq__ (self, p):
+    def __eq__(self, p):
         """Overload the == operator."""
 
-        return self.is_equal (p)
+        return self.is_equal(p)
 
-    def __ne__ (self, p):
+    def __ne__(self, p):
         """Overload the != operator."""
 
         return not (self == p)
 
-    def is_equal (self, p):
+    def is_equal(self, p):
         """Return True iff this problem is the same as the given problem."""
-        assert isinstance (p, Problem), "Must be comparing two of same type"
+        assert isinstance(p, Problem), "Must be comparing two of same type"
         if self.objects != p.objects:
             print("objects")
             return False
 
         if self.init != p.init:
-            #print "init"
-            #print "*self*"
-            #print self.init
-            #print "*p*"
-            #print p.init
+            # print "init"
+            # print "*self*"
+            # print self.init
+            # print "*p*"
+            # print p.init
             return False
 
         if self.goal != p.goal:
             print("goal")
             return False
 
-        if not all ([sa == pa for sa, pa in zip (self.actions, p.actions)]):
+        if not all([sa == pa for sa, pa in zip(self.actions, p.actions)]):
             print("actions")
             return False
 
-        if not all ([sp == pp for sp, pp in zip (self.predicates, p.predicates)]):
+        if not all([sp == pp for sp, pp in zip(self.predicates, p.predicates)]):
             print("predicates")
             return False
 
@@ -116,84 +116,91 @@ class Problem(object):
 
         return True
 
-    def _export_domain (self, fp, sp="  "):
+    def _export_domain(self, fp, sp="  "):
         """Write domain PDDL to given file."""
 
         fp.write("(define" + "\n")
 
         # domain name
-        fp.write (sp)
-        fp.write ("(domain %s)%s" % (self.domain_name, "\n"))
+        fp.write(sp)
+        fp.write("(domain %s)%s" % (self.domain_name, "\n"))
 
         # requirements
-        NONDET = ''
+        NONDET = ""
         for a in self.actions:
             if isinstance(a.effect, Oneof):
-                NONDET = ' :non-deterministic'
-        if len (self.types) > 1 or list(self.types)[0] != Predicate.OBJECT:
-            fp.write (sp + "(:requirements :strips :typing%s)\n" % NONDET)
+                NONDET = " :non-deterministic"
+        if len(self.types) > 1 or list(self.types)[0] != Predicate.OBJECT:
+            fp.write(sp + "(:requirements :strips :typing%s)\n" % NONDET)
         else:
-            fp.write (sp + "(:requirements :strips%s)\n" % NONDET)
+            fp.write(sp + "(:requirements :strips%s)\n" % NONDET)
 
         # types
-        if self.types!=None:
-            s =  ('\n'+sp+'  ').join( "%s - %s" % (o,t) for o,t in self.parent_types.items() )
-            fp.write (sp + "(:types %s)%s" %(s, "\n"))
+        if self.types != None:
+            s = ("\n" + sp + "  ").join(
+                "%s - %s" % (o, t) for o, t in self.parent_types.items()
+            )
+            fp.write(sp + "(:types %s)%s" % (s, "\n"))
 
         # constants
-        if hasattr(self, 'const_unmap'):
-            s = ('\n'+sp+'  ').join(["%s - %s" % (' '.join(self.const_unmap[t]), t) for t in self.const_unmap])
-            fp.write ("%s(:constants\n%s  %s\n%s)\n\n" % (sp, sp, s, sp))
+        if hasattr(self, "const_unmap"):
+            s = ("\n" + sp + "  ").join(
+                [
+                    "%s - %s" % (" ".join(self.const_unmap[t]), t)
+                    for t in self.const_unmap
+                ]
+            )
+            fp.write("%s(:constants\n%s  %s\n%s)\n\n" % (sp, sp, s, sp))
 
         # predicates
-        fp.write (sp + "(:predicates " + "\n")
+        fp.write(sp + "(:predicates " + "\n")
         for p in self.predicates:
-            fp.write (p.export (2, sp) + "\n")
-        fp.write (sp + ")" + "\n")
+            fp.write(p.export(2, sp) + "\n")
+        fp.write(sp + ")" + "\n")
 
         # actions
         for action in self.actions:
-            fp.write (action.export (1, sp) + "\n")
+            fp.write(action.export(1, sp) + "\n")
 
-        fp.write (")") # close define
+        fp.write(")")  # close define
 
-    def _export_problem (self, fp, sp="  "):
+    def _export_problem(self, fp, sp="  "):
         """Write the problem PDDL to given file."""
 
-        fp.write ("(define" + "\n")
+        fp.write("(define" + "\n")
 
-        fp.write (sp + "(problem %s)%s" % (self.problem_name, "\n"))
-        fp.write (sp + "(:domain %s)%s" % (self.domain_name, "\n"))
+        fp.write(sp + "(problem %s)%s" % (self.problem_name, "\n"))
+        fp.write(sp + "(:domain %s)%s" % (self.domain_name, "\n"))
 
         # objects
         o = []
-        o.append (sp + "(:objects")
+        o.append(sp + "(:objects")
         for obj in self.objects:
             if self.obj_to_type[obj] == Predicate.OBJECT:
-                o.append (sp + sp + obj)
+                o.append(sp + sp + obj)
             else:
-                #TODO may not be correct
-                t = list (self.obj_to_type [obj]) [0]
-                o.append (sp + sp + "%s - %s" % (obj, t))
-        o.append (sp + ")")
-        fp.write ("\n".join(o) + "\n")
+                # TODO may not be correct
+                t = list(self.obj_to_type[obj])[0]
+                o.append(sp + sp + "%s - %s" % (obj, t))
+        o.append(sp + ")")
+        fp.write("\n".join(o) + "\n")
 
         # init
         o = []
-        o.append (sp + "(:init")
+        o.append(sp + "(:init")
         for f in self.init.args:
-            o.append (f.export (2, sp, True))
-        o.append (sp + ")") # close init
-        fp.write ("\n".join(o) + "\n")
+            o.append(f.export(2, sp, True))
+        o.append(sp + ")")  # close init
+        fp.write("\n".join(o) + "\n")
 
         # goal
         o = []
-        o.append (sp + "(:goal")
-        o.append (self.goal.export(2, sp, True))
-        o.append (sp + ")") # close goal
-        fp.write ("\n".join (o) + "\n")
+        o.append(sp + "(:goal")
+        o.append(self.goal.export(2, sp, True))
+        o.append(sp + ")")  # close goal
+        fp.write("\n".join(o) + "\n")
 
-        fp.write (")") # close define
+        fp.write(")")  # close define
 
     def export(self, f_domain, f_problem):
         """Write out the problem in PDDL."""
@@ -201,13 +208,13 @@ class Problem(object):
         # write domain file
         sp = "    "
         fp = open(f_domain, "w+")
-        self._export_domain (fp, sp)
+        self._export_domain(fp, sp)
         fp.close()
 
         if self.init is not None:
-            fp = open (f_problem, "w+")
-            self._export_problem (fp, sp)
-            fp.close ()
+            fp = open(f_problem, "w+")
+            self._export_problem(fp, sp)
+            fp.close()
 
     def __str__(self):
         return "Problem %s from domain %s" % (self.problem_name, self.domain_name)
@@ -223,11 +230,11 @@ class Problem(object):
         d["Initial State"] = self.init
         d["Goal State"] = self.goal
         d["Actions"] = self.actions
-        #d["Types"] = self.types
+        # d["Types"] = self.types
         d["Parent Types"] = self.parent_types
-        #d["Objects"] = self.objects
+        # d["Objects"] = self.objects
         d["Obj -> Type Mapping"] = self.obj_to_type
-        #d["Type -> Obj Mapping"] = self.type_to_obj
+        # d["Type -> Obj Mapping"] = self.type_to_obj
 
         for k, v in d.items():
             print("*** %s ***" % k)
@@ -236,7 +243,7 @@ class Problem(object):
                     print("\t<no items>")
                 for k, val in v.items():
                     print("\t%s -> %s" % (k, str(val)))
-            elif hasattr(v, '__iter__'):
+            elif hasattr(v, "__iter__"):
                 if len(v) == 0:
                     print("\tNone")
                 elif k == "Actions":
@@ -261,13 +268,15 @@ class Problem(object):
         parse_tree = PDDL_Tree.create(f_domain)
 
         assert "domain" in parse_tree, "Domain must have a name"
-        self.domain_name = parse_tree ["domain"].named_children ()[0]
+        self.domain_name = parse_tree["domain"].named_children()[0]
 
         # must read types before constants
         if ":types" in parse_tree:
             if "-" in parse_tree[":types"].named_children():
                 type_hierarchy = PDDL_Utils.read_type(parse_tree[":types"])
-                self.parent_types = {subtype: parent for subtype, parent in type_hierarchy}
+                self.parent_types = {
+                    subtype: parent for subtype, parent in type_hierarchy
+                }
                 self.types = set(parse_tree[":types"].named_children())
                 self.types.discard("-")
             else:
@@ -282,17 +291,25 @@ class Problem(object):
             object_list = PDDL_Utils.read_type(parse_tree[":constants"])
             self._add_objects(object_list)
 
-        #TODO this may not be correct, depending on the type hierchy
+        # TODO this may not be correct, depending on the type hierchy
         const_map = {const: list(self.obj_to_type[const])[0] for const in self.objects}
-        self.const_unmap = {t: [] for t in set([list(self.obj_to_type[const])[0] for const in self.objects])}
+        self.const_unmap = {
+            t: []
+            for t in set([list(self.obj_to_type[const])[0] for const in self.objects])
+        }
         for const in self.objects:
             self.const_unmap[list(self.obj_to_type[const])[0]].append(const)
 
-        self.predicates = [self.to_predicate(c, map=const_map) for c in parse_tree[":predicates"].children]
+        self.predicates = [
+            self.to_predicate(c, map=const_map)
+            for c in parse_tree[":predicates"].children
+        ]
 
         # some predicates have this property: they are untyped.
         for predicate in self.predicates:
-            if Predicate.OBJECT not in self.types and any([arg[1] == Predicate.OBJECT for arg in predicate.args]):
+            if Predicate.OBJECT not in self.types and any(
+                [arg[1] == Predicate.OBJECT for arg in predicate.args]
+            ):
                 for t in self.types:
                     if self.parent_types[t] is None:
                         self.parent_types[t] = Predicate.OBJECT
@@ -371,29 +388,43 @@ class Problem(object):
         parse_tree = PDDL_Tree.create(f_problem)
 
         assert "problem" in parse_tree, "Problem must have a name"
-        self.problem_name = parse_tree ["problem"].named_children ()[0]
+        self.problem_name = parse_tree["problem"].named_children()[0]
 
         # objects must be parsed first
         if ":objects" in parse_tree:
             object_list = PDDL_Utils.read_type(parse_tree[":objects"])
             self._add_objects(object_list)
 
-        #TODO this may not be valid with a non-flat type hierchy
+        # TODO this may not be valid with a non-flat type hierchy
         obj_map = {obj: list(self.obj_to_type[obj])[0] for obj in self.objects}
 
         # the goal can be expressed in either a formula form, or a direct form
-        if len(parse_tree[":goal"].children) == 1 and parse_tree[":goal"].children[0].name == "and":
-            self.goal = And([Primitive(self.to_fluents(c)) for c in parse_tree[":goal"].children[0].children])
+        if (
+            len(parse_tree[":goal"].children) == 1
+            and parse_tree[":goal"].children[0].name == "and"
+        ):
+            self.goal = And(
+                [
+                    Primitive(self.to_fluents(c))
+                    for c in parse_tree[":goal"].children[0].children
+                ]
+            )
         else:
-            self.goal = And([Primitive(self.to_fluents(c)) for c in parse_tree[":goal"].children])
+            self.goal = And(
+                [Primitive(self.to_fluents(c)) for c in parse_tree[":goal"].children]
+            )
 
         # it is critical that the formula here be checked against the objects
-        if len(parse_tree[":init"].children) == 1 and \
-                parse_tree[":init"].children[0].name == "and":
+        if (
+            len(parse_tree[":init"].children) == 1
+            and parse_tree[":init"].children[0].name == "and"
+        ):
             self.init = self.to_formula(parse_tree[":init"].children[0], obj_map)
         else:
             # initial condition is one big AND
-            self.init = And([self.to_formula(c, obj_map) for c in parse_tree[":init"].children])
+            self.init = And(
+                [self.to_formula(c, obj_map) for c in parse_tree[":init"].children]
+            )
 
     def to_action(self, node):
         """
@@ -406,34 +437,39 @@ class Problem(object):
 
         if ":parameters" in node:
             params = PDDL_Utils.read_type(node[":parameters"])
-            parameter_map = {p[0]: p[1] for p in params}  # map of variable-names to types
+            parameter_map = {
+                p[0]: p[1] for p in params
+            }  # map of variable-names to types
         else:
             params = []
 
         if ":precondition" in node:
-            assert len(node[":precondition"].children) == 1,\
-                "precondition should have one top-level child"
+            assert (
+                len(node[":precondition"].children) == 1
+            ), "precondition should have one top-level child"
             precond = self.to_formula(node[":precondition"].children[0], parameter_map)
         else:
             precond = None
 
         if ":observe" in node:
-            assert len(node[":observe"].children) == 1,\
-                "observe should have one top-level child"
+            assert (
+                len(node[":observe"].children) == 1
+            ), "observe should have one top-level child"
             observe = self.to_predicate(node[":observe"].children[0], map=parameter_map)
         else:
             observe = None
 
         if ":effect" in node:
-            assert len(node[":effect"].children) == 1,\
-                "effect should have one top-level child"
+            assert (
+                len(node[":effect"].children) == 1
+            ), "effect should have one top-level child"
             effect = self.to_formula(node[":effect"].children[0], parameter_map)
         else:
             effect = None
 
         return Action(name, params, precond, observe, effect)
 
-    def to_predicate(self, node, f='predicate', map=None):
+    def to_predicate(self, node, f="predicate", map=None):
         """
             Create a predicate out of this PDDL_Tree node.
             For now, will assume this makes sense.
@@ -442,21 +478,21 @@ class Problem(object):
         args = PDDL_Utils.read_type(node)
 
         # change the type if there is only 1 type
-        if len (self.types) == 1:
+        if len(self.types) == 1:
             t_args = args
-            t = list (self.types) [0]
+            t = list(self.types)[0]
             args = []
             for arg in t_args:
                 if arg[1] != t:
-                    args.append ( (arg[0], t) )
+                    args.append((arg[0], t))
                 else:
-                    args.append (arg)
+                    args.append(arg)
 
         # here is where the map comes in...
         if map is None:
-            if 'predicate' == f:
+            if "predicate" == f:
                 return Predicate(node.name, args)
-            elif 'fluent' == f:
+            elif "fluent" == f:
                 return Predicate(node.name, args=None, ground_args=args)
         else:
             new_args = []
@@ -466,9 +502,9 @@ class Problem(object):
                 else:
                     new_args.append((v, t))
 
-            if 'predicate' == f:
+            if "predicate" == f:
                 return Predicate(node.name, new_args)
-            elif 'fluent' == f:
+            elif "fluent" == f:
                 return Predicate(node.name, args=None, ground_args=new_args)
 
     def to_fluents(self, node):
@@ -478,7 +514,7 @@ class Problem(object):
         """
 
         # same call as predicate, except cast to fluent
-        return self.to_predicate(node, 'fluent')
+        return self.to_predicate(node, "fluent")
 
     def to_formula(self, node, parameter_map=None):
         """
@@ -489,8 +525,10 @@ class Problem(object):
         # forall is so weird that we can treat it as an entirely seperate entity
         if "forall" == node.name:
             # treat args differently in this case
-            assert len(node.children) in[2, 4],\
-                "Forall must have a variable(typed or untyped) and formula that it quantifies"
+            assert len(node.children) in [
+                2,
+                4,
+            ], "Forall must have a variable(typed or untyped) and formula that it quantifies"
             i = len(node.children) - 1
 
             if len(node.children) == 2 and len(node.children[0].children) > 0:
@@ -507,7 +545,7 @@ class Problem(object):
                 parameter_map[v] = t
             args = [self.to_formula(c, parameter_map) for c in node.children[i:]]
             for v, t in l:
-                del(parameter_map[v])
+                del parameter_map[v]
             return Forall(l, args)
 
         i = 0
@@ -524,20 +562,21 @@ class Problem(object):
         elif "xor" == node.name:
             return Xor(args)
         elif "nondet" == node.name:
-            assert len(node.children) == 1,\
-                                       "nondet must only have a single child as a predicate"
+            assert (
+                len(node.children) == 1
+            ), "nondet must only have a single child as a predicate"
             # make p != p2, otherwise might run into issues with mutation in some later step
             return Oneof([args[0], Not(args)])
         elif "unknown" == node.name:
-            assert len(node.children) == 1,\
-                "unknown must only have a single child as a predicate"
+            assert (
+                len(node.children) == 1
+            ), "unknown must only have a single child as a predicate"
             # make p != p2, otherwise might run into issues with mutation in some later step
             p = Primitive(self.to_predicate(node.children[0], map=parameter_map))
             p2 = Primitive(self.to_predicate(node.children[0], map=parameter_map))
             return Xor([p, Not([p2])])
         elif "when" == node.name:
-            assert len(args) == 2,\
-                "When clause must have exactly 2 children"
+            assert len(args) == 2, "When clause must have exactly 2 children"
             return When(args[0], args[1])
         else:
             # it's a predicate

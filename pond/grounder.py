@@ -1,7 +1,7 @@
-from . parser import Problem
-from . action import Action
-from . formula import Primitive, Forall, When, And
-from . predicate import Predicate
+from .parser import Problem
+from .action import Action
+from .formula import Primitive, Forall, When, And
+from .predicate import Predicate
 import itertools
 
 
@@ -42,7 +42,6 @@ class GroundProblem(Problem):
 
         """
 
-
         super(GroundProblem, self).__init__(domain_file, problem_file)
 
         if no_ground:
@@ -50,9 +49,9 @@ class GroundProblem(Problem):
             self.fluents = set([])
             fluent_dict = {}
             for p in self.predicates:
-                f = Predicate (p.name, None, p.args)
-                fluent_dict [hash (f)] = f
-                self.fluents.add (f)
+                f = Predicate(p.name, None, p.args)
+                fluent_dict[hash(f)] = f
+                self.fluents.add(f)
 
             # create operators by changing all the formulas
             self.operators = set([])
@@ -62,24 +61,24 @@ class GroundProblem(Problem):
                 if a.precondition is None:
                     precond = None
                 else:
-                    a.precondition.to_ground (fluent_dict)
+                    a.precondition.to_ground(fluent_dict)
                     precond = a.precondition
 
                 if a.effect is None:
                     effect = None
                 else:
-                    a.effect.to_ground (fluent_dict)
+                    a.effect.to_ground(fluent_dict)
                     effect = a.effect
 
                 if a.observe is None:
                     observe = None
                 else:
-                    p = Predicate (a.observe.name, None, a.observe.args)
-                    observe = fluent_dict[hash (p)]
-                op = Operator (a.name, param, precond, observe, effect)
-                self.operators.add (op)
+                    p = Predicate(a.observe.name, None, a.observe.args)
+                    observe = fluent_dict[hash(p)]
+                op = Operator(a.name, param, precond, observe, effect)
+                self.operators.add(op)
 
-            self.init.to_ground (fluent_dict)
+            self.init.to_ground(fluent_dict)
         else:
             self._ground()
 
@@ -89,13 +88,13 @@ class GroundProblem(Problem):
         Return a dictionary mapping fluent names to truth assignments.
         """
 
-        return self.init.get_assignments ()
+        return self.init.get_assignments()
 
-    def is_equal (self, p):
+    def is_equal(self, p):
         """Return True iff this ground problem is equivalent to given ground problem.
         Here, we don't care about underlying lifted representation."""
 
-        assert isinstance (p, GroundProblem), "Must compare two ground problems"
+        assert isinstance(p, GroundProblem), "Must compare two ground problems"
 
         if self.objects != p.objects:
             print("objects")
@@ -108,60 +107,67 @@ class GroundProblem(Problem):
             print("goal")
             return False
 
-        if not all ([sa == pa for sa, pa in \
-                zip (sorted (list (self.operators)), \
-                sorted (list (p.operators)))]):
+        if not all(
+            [
+                sa == pa
+                for sa, pa in zip(
+                    sorted(list(self.operators)), sorted(list(p.operators))
+                )
+            ]
+        ):
             print("operators")
             return False
 
-        if not all ([sp == pp for sp, pp in \
-                zip (sorted (list (self.fluents)), \
-                sorted (list (p.fluents)))]):
+        if not all(
+            [
+                sp == pp
+                for sp, pp in zip(sorted(list(self.fluents)), sorted(list(p.fluents)))
+            ]
+        ):
             print("fluents")
             print("*self*")
-            print(sorted( list( self.fluents)))
+            print(sorted(list(self.fluents)))
             print("*p*")
-            print(sorted (list( p.fluents)))
+            print(sorted(list(p.fluents)))
             return False
 
         if self.types != p.types or self.parent_types != p.parent_types:
             print("types")
             return False
-        
+
         return True
 
-
-    def _export_domain (self, fp, sp="  "):
+    def _export_domain(self, fp, sp="  "):
         """Write domain PDDL to given file."""
 
         fp.write("(define" + "\n")
 
         # domain name
-        fp.write (sp)
-        fp.write ("(domain %s)%s" % (self.domain_name, "\n"))
+        fp.write(sp)
+        fp.write("(domain %s)%s" % (self.domain_name, "\n"))
 
         # requirements
-        if len (self.types) > 1 or list(self.types)[0] != Predicate.OBJECT:
-            fp.write (sp + "(:requirements :strips :typing)\n")
+        if len(self.types) > 1 or list(self.types)[0] != Predicate.OBJECT:
+            fp.write(sp + "(:requirements :strips :typing)\n")
         else:
-            fp.write (sp + "(:requirements :strips)\n")
+            fp.write(sp + "(:requirements :strips)\n")
 
         # types
-        #TODO likely wrong, doesn't capture the type hierarchy
-        s = " ".join (filter(lambda t: t!= Predicate.OBJECT, self.types))
-        fp.write (sp + "(:types %s)%s" %(s, "\n"))
+        # TODO likely wrong, doesn't capture the type hierarchy
+        s = " ".join(filter(lambda t: t != Predicate.OBJECT, self.types))
+        fp.write(sp + "(:types %s)%s" % (s, "\n"))
 
         # fluents (ground predicates)
-        fp.write (sp + "(:predicates " + "\n")
+        fp.write(sp + "(:predicates " + "\n")
         for fluent in self.fluents:
-            fp.write (fluent.export (2, sp) + "\n")
-        fp.write (sp + ")" + "\n")
+            fp.write(fluent.export(2, sp) + "\n")
+        fp.write(sp + ")" + "\n")
 
         # operators
         for op in self.operators:
-            fp.write (op.export (1, sp) + "\n")
+            fp.write(op.export(1, sp) + "\n")
 
-        fp.write (")") # close define
+        fp.write(")")  # close define
 
     def export(self, f_domain, f_problem):
         """Write out the problem in PDDL.
@@ -170,14 +176,14 @@ class GroundProblem(Problem):
 
         sp = "    "
         fp = open(f_domain, "w+")
-        self._export_domain (fp, sp)
+        self._export_domain(fp, sp)
         fp.close()
 
         if self.init is not None:
-            fp = open (f_problem, "w+")
+            fp = open(f_problem, "w+")
             # _export_problem is same as parent's since init is overwritten
-            self._export_problem (fp, sp)
-            fp.close ()
+            self._export_problem(fp, sp)
+            fp.close()
 
     def _create_param_dict(self, params):
         """
@@ -208,17 +214,20 @@ class GroundProblem(Problem):
     def _get_unassigned_vars(self, formula, assigned):
         """Augment the dictionary in assigned with unassigned vars"""
 
-        #if isinstance(formula, Forall):
+        # if isinstance(formula, Forall):
         #    try:
         #        for v, t in formula.params:
         #            assigned[(v, hash(formula))] = self.type_to_obj[t]
         #    except KeyError as e:
         #        raise KeyError("Cannot get unassigned vars list due to bad parsing of forall object: %s" % str(formula))
-        #elif isinstance(formula, Primitive):
+        # elif isinstance(formula, Primitive):
         if isinstance(formula, Primitive):
             for v, t in formula.predicate.args:
                 if v.startswith("?") and v not in assigned:
-                    raise KeyError("Found unbound variable %s in predicate %s" % v, str(formula.predicate))
+                    raise KeyError(
+                        "Found unbound variable %s in predicate %s" % v,
+                        str(formula.predicate),
+                    )
         else:
             [self._get_unassigned_vars(arg, assigned) for arg in formula.args]
 
@@ -233,10 +242,10 @@ class GroundProblem(Problem):
         """
 
         d = self._create_param_dict(params)
-        
-        #if action is not None and action.effect is not None:
-            # query the effect for any forall conditionals
-            #self._get_unassigned_vars(action.effect, d)
+
+        # if action is not None and action.effect is not None:
+        # query the effect for any forall conditionals
+        # self._get_unassigned_vars(action.effect, d)
 
         param_names = list(d.keys())
         possible_values = [d[name] for name in param_names]
@@ -263,12 +272,14 @@ class GroundProblem(Problem):
                 # will assume these are already ground
                 fluent_args.append((var_name, var_type))
             else:
-                raise KeyError("Unknown variable %s in predicate %s" % (var_name, str(predicate)))
+                raise KeyError(
+                    "Unknown variable %s in predicate %s" % (var_name, str(predicate))
+                )
 
         fluent = Predicate(predicate.name, args=None, ground_args=fluent_args)
 
-        if hash (fluent) in fluent_dict:
-            return fluent_dict[hash (fluent)]
+        if hash(fluent) in fluent_dict:
+            return fluent_dict[hash(fluent)]
         else:
             return fluent
 
@@ -286,23 +297,40 @@ class GroundProblem(Problem):
             return None
 
         if isinstance(formula, Primitive):
-            return Primitive(self._predicate_to_fluent(formula.predicate, assignment, fluent_dict))
+            return Primitive(
+                self._predicate_to_fluent(formula.predicate, assignment, fluent_dict)
+            )
         elif isinstance(formula, Forall):
-            
+
             new_conjuncts = []
             var_names, val_generator = self._create_valuations(formula.params)
             for valuation in val_generator:
-                new_assignment = {var_name: val for var_name, val in zip(var_names, valuation)}
+                new_assignment = {
+                    var_name: val for var_name, val in zip(var_names, valuation)
+                }
                 for k in assignment:
                     new_assignment[k] = assignment[k]
-                new_conjuncts.append(self._partial_ground_formula(formula.args[0], new_assignment, fluent_dict))
+                new_conjuncts.append(
+                    self._partial_ground_formula(
+                        formula.args[0], new_assignment, fluent_dict
+                    )
+                )
             return And(new_conjuncts)
-            
+
         elif isinstance(formula, When):
-            return When(self._partial_ground_formula(formula.condition, assignment, fluent_dict),
-                        self._partial_ground_formula(formula.result, assignment, fluent_dict))
+            return When(
+                self._partial_ground_formula(
+                    formula.condition, assignment, fluent_dict
+                ),
+                self._partial_ground_formula(formula.result, assignment, fluent_dict),
+            )
         else:
-            return type(formula)([self._partial_ground_formula(arg, assignment, fluent_dict) for arg in formula.args])
+            return type(formula)(
+                [
+                    self._partial_ground_formula(arg, assignment, fluent_dict)
+                    for arg in formula.args
+                ]
+            )
 
     def _action_to_operator(self, action, assignment, fluent_dict):
         """
@@ -315,10 +343,16 @@ class GroundProblem(Problem):
             An operator that has the particular valuation for the variables as given in input.
         """
 
-        #TODO this naming convention fails when there are no parameters but a forall in the effect
-        op_name = action.name + "_" + "_".join([assignment[var_name] for var_name, _ in action.parameters])
+        # TODO this naming convention fails when there are no parameters but a forall in the effect
+        op_name = (
+            action.name
+            + "_"
+            + "_".join([assignment[var_name] for var_name, _ in action.parameters])
+        )
         op_params = [(assignment[var_name], t) for var_name, t in action.parameters]
-        op_precond = self._partial_ground_formula(action.precondition, assignment, fluent_dict)
+        op_precond = self._partial_ground_formula(
+            action.precondition, assignment, fluent_dict
+        )
         op_observe = self._predicate_to_fluent(action.observe, assignment, fluent_dict)
         op_effect = self._partial_ground_formula(action.effect, assignment, fluent_dict)
         return Operator(op_name, op_params, op_precond, op_observe, op_effect)
@@ -329,11 +363,13 @@ class GroundProblem(Problem):
         self.operators = set([])
 
         for a in self.actions:
-            
+
             var_names, val_generator = self._create_valuations(a.parameters, a)
 
             for valuation in val_generator:
-                assignment = {var_name: val for var_name, val in zip(var_names, valuation)}
+                assignment = {
+                    var_name: val for var_name, val in zip(var_names, valuation)
+                }
                 self.operators.add(self._action_to_operator(a, assignment, fluent_dict))
 
     def _create_fluents(self):
@@ -343,7 +379,9 @@ class GroundProblem(Problem):
         for p in self.predicates:
             var_names, val_generator = self._create_valuations(p.args)
             for valuation in val_generator:
-                assignment = {var_name: val for var_name, val in zip(var_names, valuation)}
+                assignment = {
+                    var_name: val for var_name, val in zip(var_names, valuation)
+                }
                 self.fluents.add(self._predicate_to_fluent(p, assignment))
 
     def _get_unground_vars(self, formula, d):
@@ -361,7 +399,7 @@ class GroundProblem(Problem):
             d[(formula.v, hash(formula))] = d.t
             [self._get_unground_vars(arg, d) for arg in formula.args]
         elif isinstance(formula, When):
-            [self._get_unground_vars(c, d) for c in[formula.condition, formula.result]]
+            [self._get_unground_vars(c, d) for c in [formula.condition, formula.result]]
         elif isinstance(formula, Primitive):
             for v, t in formula.predicate.args:
                 d[(v, hash(formula))] = t
@@ -372,7 +410,7 @@ class GroundProblem(Problem):
         """Ground the initial state."""
 
         d = {}
-        #self._get_unground_vars(self.init, d)
+        # self._get_unground_vars(self.init, d)
         self.init = self._partial_ground_formula(self.init, d, fluent_dict)
 
     def _ground(self):
@@ -400,7 +438,7 @@ class GroundProblem(Problem):
         d = {
             "Initial State": self.init,
             "Operators": self.operators,
-            "Fluents": self.fluents
+            "Fluents": self.fluents,
         }
 
         for k, v in d.iteritems():
@@ -447,16 +485,23 @@ class Operator(Action):
             effect:         A ground formula for the effect
         """
 
-        super(Operator, self).__init__\
-            (name, parameters, precondition, observe, effect)
+        super(Operator, self).__init__(name, parameters, precondition, observe, effect)
 
     def __str__(self):
-        return super(Operator, self).__str__().replace("action", "operator")\
+        return (
+            super(Operator, self)
+            .__str__()
+            .replace("action", "operator")
             .replace("Action", "Operator")
+        )
 
     def __repr__(self):
-        return super(Operator, self).__repr__().replace("action", "operator")\
+        return (
+            super(Operator, self)
+            .__repr__()
+            .replace("action", "operator")
             .replace("Action", "Operator")
+        )
 
     def dump(self, lvl=0):
         """ Verbose string representation for debugging
@@ -467,10 +512,15 @@ class Operator(Action):
         # for operators, sufficient just to print the name, because pretty self-explanatory
         print("\t" * lvl + "Operator %s" % self.name)
         if len(self.parameters) > 0:
-            print("\t" * (lvl + 1) + "Parameters: " + \
-                ", ".join([v_type + " " + v_name for v_name, v_type in self.parameters]))
+            print(
+                "\t" * (lvl + 1)
+                + "Parameters: "
+                + ", ".join(
+                    [v_type + " " + v_name for v_name, v_type in self.parameters]
+                )
+            )
         else:
             print("\t" * (lvl + 1) + "Parameters: <none>")
-            #print(lvl + 1) * "\t" + "Precondition: " + str(self.precondition)
-        #print(lvl + 1) * "\t" + "Effect: " + str(self.effect)
-        #print(lvl + 1) * "\t" + "Observe: " + str(self.observe)
+            # print(lvl + 1) * "\t" + "Precondition: " + str(self.precondition)
+        # print(lvl + 1) * "\t" + "Effect: " + str(self.effect)
+        # print(lvl + 1) * "\t" + "Observe: " + str(self.observe)
