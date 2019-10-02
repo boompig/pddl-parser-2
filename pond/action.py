@@ -1,8 +1,10 @@
 from .formula import Formula
 from .predicate import Predicate
 
+from typing import List, Tuple, Union
 
-class Action(object):
+
+class Action:
     """
         Data structure to contain a lifted action provided in the domain file.
 
@@ -23,24 +25,25 @@ class Action(object):
             none
     """
 
-    def __init__(self, name, parameters, precondition, observe, effect):
+    def __init__(self, name: str, parameters: List[Tuple[str, str]], precondition: Formula,
+                 observe: Union[Predicate, None], effect: Union[Formula, None]):
         """
-            Create a new action.
+        Create a new action.
 
-            Inputs:
-                name: the action name (string)
+        Inputs:
+            name: the action name (string)
 
-                parameters: list of tuples that contain a pair of strings:
-                    1) the variable name
-                    2) the variable type
+            parameters: list of tuples that contain a pair of strings:
+                1) the variable name
+                2) the variable type
 
-                precondition: formula object
-                    #TODO some actions have no precondition, set this to None
+            precondition: formula object
+                #TODO some actions have no precondition, set this to None
 
-                observe: predicate object (or None if the action is not a sensing action)
+            observe: predicate object (or None if the action is not a sensing action)
 
-                effect: formula object
-                    #TODO some actions have no effects, set this to None
+            effect: formula object
+                #TODO some actions have no effects, set this to None
         """
 
         assert isinstance(name, str), "name must be a string"
@@ -63,27 +66,29 @@ class Action(object):
         self.observe = observe
         self.effect = effect
 
-    def _hash_string(self):
+    def _hash_string(self) -> str:
         return self.name + "_" + "_".join([p[0] + "_" + p[1] for p in self.parameters])
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._hash_string())
 
-    def __cmp__(self, a):
+    def __cmp__(self, a: Action) -> int:
         if self._hash_string() < a._hash_string():
             return -1
-        elif self._hash_string() == a.hash_string():
+        elif self._hash_string() == a._hash_string():
             return 0
         else:
             return 1
 
-    def __eq__(self, a):
+    def __eq__(self, a: object) -> bool:
+        if not isinstance(a, Action):
+            return False
         return self.is_equal(a)
 
-    def __ne__(self, a):
+    def __ne__(self, a: object) -> bool:
         return not (self == a)
 
-    def is_equal(self, a):
+    def is_equal(self, a: Action) -> bool:
         """True iff actions are equal.
         They are equal if the name, precondition, parameters, observe and effects are all equal."""
 
@@ -95,7 +100,7 @@ class Action(object):
             and self.effect == a.effect
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         """ String representation for easier debugging """
 
         # for now, only show name and parameters
@@ -104,7 +109,7 @@ class Action(object):
             ", ".join([v_type + " " + v_name for v_name, v_type in self.parameters]),
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Print informative representation."""
 
         return "Action %s taking parameters %s" % (
@@ -112,7 +117,7 @@ class Action(object):
             ", ".join([p for p, t in self.parameters]),
         )
 
-    def export(self, lvl=1, sp="  "):
+    def export(self, lvl: int = 1, sp: str = "  ") -> str:
         """Print back the action in PDDL form."""
 
         o = []  # output, which is a list of lines
@@ -139,7 +144,7 @@ class Action(object):
         o.append(prefix + ")")
         return "\n".join(o)
 
-    def dump(self, lvl=0):
+    def dump(self, lvl: int = 0) -> None:
         """ Verbose string representation for debugging
         Inputs:
             lvl:    Tab level
