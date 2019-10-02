@@ -1,3 +1,7 @@
+# python
 *.pyc
 env
 .mypy_cache
+
+# editor
+*.code-workspace
