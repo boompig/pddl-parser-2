@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import tempfile
-from typing import Callable
+from typing import Callable, Optional
 
 from pond import grounder, parser
 
@@ -15,7 +15,7 @@ def get_files(d: str) -> tuple:
         d    directory to search in
 
     Outputs:
-        p_fname        list of file names of problem files (without parent path)
+        p_fnames       list of file names of problem files (without parent path)
         d_fname        file name of domain file (without parent path)
     """
 
@@ -41,7 +41,7 @@ def get_files(d: str) -> tuple:
     return p_fnames, d_fname
 
 
-def test_ktm(folder, parent_name):
+def test_ktm(folder: str, parent_name: str):
 
     # find location of domain and problem files
     p_fnames, d_fname = get_files(folder)
@@ -150,7 +150,8 @@ def batch_ground(parent, parent_name):
     print("Success rate: %d%%" % int(success_rate))
 
 
-def parse_problem(folder, domain_name, silent=False, index=None):
+def parse_problem(folder: str, domain_name: str, silent: bool = False,
+                  index: Optional[int] = None):
     """ Fully create the problem from the given folder"""
 
     p_fnames, d_fname = get_files(folder)
@@ -488,7 +489,8 @@ if __name__ == "__main__":
         parents[parent_name] = os.path.join(here, path)
 
     arg_parser = argparse.ArgumentParser()
-    sp = arg_parser.add_subparsers()
+    sp = arg_parser.add_subparsers(dest="subparser")
+    sp.required = True
 
     ktm = sp.add_parser("ktm", help="Test KTM stuff")
     ktm.add_argument("folder")

@@ -1,12 +1,14 @@
 from collections import OrderedDict
-from .formula import And, Primitive, Forall, When, Xor, Not, Oneof, Or
+from typing import List, Optional, Set
+
 from .action import Action
-from .predicate import Predicate
+from .formula import Formula, And, Forall, Not, Oneof, Or, Primitive, When, Xor
 from .pddl_tree import PDDL_Tree
+from .predicate import Predicate
 from .utils import PDDL_Utils
 
 
-class Problem(object):
+class Problem:
     """
     A problem instance.
 
@@ -38,9 +40,9 @@ class Problem(object):
         export:  Save this problem into 2 PDDL files
     """
 
-    OBJECT = "default_objec"
+    OBJECT = "default_object"
 
-    def __init__(self, domain_file, problem_file=None):
+    def __init__(self, domain_file: str, problem_file: Optional[str] = None):
         """
         Create a new problem instance.
 
@@ -52,23 +54,23 @@ class Problem(object):
         """
 
         # this is common to domain and problem file
-        self.objects = set([])
-        self.obj_to_type = {}
-        self.type_to_obj = {}
+        self.objects = set([])  # type: Optional[Set[tuple]]
+        self.obj_to_type = {}  # type: dict
+        self.type_to_obj = {}  # type: dict
 
         if domain_file is None:
-            self.domain_name = None
-            self.types = None
-            self.parent_types = None
-            self.predicates = None
-            self.action = None
+            self.domain_name = None  # type: Optional[str]
+            self.types = None  # type: Optional[Set[str]]
+            self.parent_types = None  # type: Optional[dict]
+            self.predicates = None  # type: Optional[List[Predicate]]
+            self.actions = None  # type: Optional[List[Action]]
         else:
             # make sure that domain is parsed before the problem
             self._parse_domain(domain_file)
 
         if problem_file is None:
-            self.init = None
-            self.goal = None
+            self.init = None  # type: Optional[Formula]
+            self.goal = None  # type: Optional[Formula]
             self.objects = None
         else:
             self._parse_problem(problem_file)
@@ -255,7 +257,7 @@ class Problem(object):
                 print("\t" + str(v))
             print("")
 
-    def _parse_domain(self, f_domain):
+    def _parse_domain(self, f_domain: str):
         """
         Extract information from the domain file.
 
@@ -292,11 +294,12 @@ class Problem(object):
             self._add_objects(object_list)
 
         # TODO this may not be correct, depending on the type hierchy
+        assert self.objects is not None
         const_map = {const: list(self.obj_to_type[const])[0] for const in self.objects}
         self.const_unmap = {
             t: []
             for t in set([list(self.obj_to_type[const])[0] for const in self.objects])
-        }
+        }  # type: dict
         for const in self.objects:
             self.const_unmap[list(self.obj_to_type[const])[0]].append(const)
 
@@ -317,7 +320,7 @@ class Problem(object):
                 self.parent_types[Predicate.OBJECT] = None
                 self.types.add(Predicate.OBJECT)
                 self.type_to_obj[Predicate.OBJECT] = set([])
-                for obj, type_list in self.obj_to_type.iteritems():
+                for obj, type_list in self.obj_to_type.items():
                     type_list.add(Predicate.OBJECT)
                     self.type_to_obj[Predicate.OBJECT].add(obj)
 
@@ -326,11 +329,12 @@ class Problem(object):
 
         self.actions = [self.to_action(c) for c in parse_tree.find_all(":action")]
 
-    def _get_supertypes(self, t, d):
+    def _get_supertypes(self, t, d: dict):
         """Find all the supertypes of t and add them to d.
            Do the same on all the supertypes as well."""
 
         # get the supertype of t
+        assert isinstance(self.parent_types, dict)
         if self.parent_types[t] is None:
             d[t] = set([])
         else:
@@ -338,7 +342,7 @@ class Problem(object):
             self._get_supertypes(parent, d)
             d[t] = d[parent].union(set([parent]))
 
-    def _add_objects(self, object_list):
+    def _add_objects(self, object_list: List[tuple]):
         """Add the objects to the object set.
         Input:
             object_list:
@@ -352,6 +356,7 @@ class Problem(object):
         """
 
         object_types = set([t for _, t in object_list])
+        assert self.types is not None
         if not object_types.issubset(self.types):
             # for debugging
             s = "The types found in the problem file must be a subset of the types listed in the domain file\n"
@@ -359,6 +364,8 @@ class Problem(object):
             s += "Problem types: %s" % str(object_types)
             raise ValueError(s)
 
+        assert self.objects is not None
+        assert self.parent_types is not None
         for obj, t in object_list:
             self.objects.add(obj)
 
@@ -372,7 +379,7 @@ class Problem(object):
                 self.obj_to_type[obj].add(k)
                 k = self.parent_types[k]
 
-    def _parse_problem(self, f_problem):
+    def _parse_problem(self, f_problem: str):
         """
         Extract information from the problem file.
 
@@ -395,6 +402,7 @@ class Problem(object):
             object_list = PDDL_Utils.read_type(parse_tree[":objects"])
             self._add_objects(object_list)
 
+        assert self.objects is not None
         # TODO this may not be valid with a non-flat type hierchy
         obj_map = {obj: list(self.obj_to_type[obj])[0] for obj in self.objects}
 
