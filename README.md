@@ -1,3 +1,9 @@
-# POND
+# PDDL Parser
 
-A collection of utilities to help with parsing, grounding, and solving Partially-Observable Non-Deterministic (POND) Problems
+This is a collection of utilities to read PDDL and POND (Partially-Observable Non-Deterministic) files.
+
+Functions provided by this package:
+
+- parsing
+- grounding
+- KTM
