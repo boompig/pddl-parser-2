@@ -1,3 +1,6 @@
+from typing import Iterator, Tuple
+
+
 class Predicate(object):
     """
     Simple data structure for the predicate objects.
@@ -18,7 +21,8 @@ class Predicate(object):
         ground:    Takes in an iterable of tuples that contain a pair of strings.
                     The first is a variable name and the second is an object name.
                     It should throw an error if the variable type and the object type do not match.
-                    It should also throw an error if the set of variables passed in isn't a subset of the variables in args.
+                    It should also throw an error if the set of variables passed in isn't a subset
+                    of the variables in args.
                     The effect should be to remove the appropriate elements from the args list,
                     and add the appropriate elements to the ground_args list.
     """
@@ -38,9 +42,7 @@ class Predicate(object):
         """
 
         assert isinstance(name, str), "Predicate name must be a string"
-        assert (
-            ground_args is None or args is None
-        ), "Either this Predicate is ground or it is not"
+        assert ground_args is None or args is None, "Either this Predicate is ground or it is not"
 
         if ground_args is None:
             assert isinstance(args, list) and all(
@@ -61,9 +63,7 @@ class Predicate(object):
             return self.name + "_" + "_".join([arg[0] for arg in self.ground_args])
         else:
             # this is an unground predicate
-            return (
-                self.name + "_" + "_".join([arg[0] + "_" + arg[1] for arg in self.args])
-            )
+            return self.name + "_" + "_".join([arg[0] + "_" + arg[1] for arg in self.args])
 
     def __hash__(self):
         """Hash function, to compare two fluents.
@@ -99,11 +99,7 @@ class Predicate(object):
         # if self.ground_args != p.ground_args:
         #    print "ground_args don't match"
 
-        return (
-            self.name == p.name
-            and self.args == p.args
-            and self.ground_args == p.ground_args
-        )
+        return self.name == p.name and self.args == p.args and self.ground_args == p.ground_args
 
     def export(self, lvl=1, sp="  ", untyped=False):
         """Return a PDDL representation of this predicate, as a string."""
@@ -125,12 +121,14 @@ class Predicate(object):
 
         return (sp * lvl) + "(%s%s%s)" % (self.name, sep, arg_s)
 
-    def ground(self, it):
+    def ground(self, it: Iterator[Tuple[str, str]]):
         """Takes in an iterable of tuples that contain a pair of strings.
         The first is a variable name and the second is an object name.
         It should throw an error if the variable type and the object type do not match.
-        It should also throw an error if the set of variables passed in isn't a subset of the variables in args.
-        The effect should be to remove the appropriate elements from the args list, and add the appropriate elements to the ground_args list.
+        It should also throw an error if the set of variables passed in isn't a subset
+        of the variables in args.
+        The effect should be to remove the appropriate elements from the args list, and
+        add the appropriate elements to the ground_args list.
         """
 
         assert hasattr(it, "__iter__") and all(
@@ -141,7 +139,7 @@ class Predicate(object):
                 and isinstance(item[1], str)
                 for item in it
             ]
-        ), "first argument must be iterable, and be a sequence of tuples, which are pairs of strings"
+        ), "first argument must be iterable sequence of tuples, which are pairs of strings"
 
         # it_var_names = set ([ item[0] for item in it ])
         # it_obj_names = set ([ item[1] for item in it ])
@@ -172,10 +170,7 @@ class Predicate(object):
         else:
             # return "%s (%s)" % (self.name, \
             # ", ".join(["%s %s" % (arg[1], arg[0]) for arg in self.ground_args]))
-            return "%s(%s)" % (
-                self.name,
-                " ".join([str(arg[0]) for arg in self.ground_args]),
-            )
+            return "%s(%s)" % (self.name, " ".join([str(arg[0]) for arg in self.ground_args]))
 
     def __repr__(self):
         return "Predicate " + str(self)

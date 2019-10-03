@@ -14,9 +14,7 @@ def recursively_find_files(d: str) -> List[str]:
     d is fully qualified directory path
     return the absolute path to all relevant files in d
     """
-    contents = [
-        f for f in os.listdir(d) if not f.endswith(".swp") and not f.endswith(".orig")
-    ]
+    contents = [f for f in os.listdir(d) if not f.endswith(".swp") and not f.endswith(".orig")]
     fnames = []
     for f in contents:
         path = os.path.join(d, f)
@@ -60,7 +58,9 @@ def read_all_files(d: str) -> Iterator[Tuple[str, Optional[str]]]:
             domain = tree["domain"].named_children()[0]
             domain_map[domain] = fname
         else:
-            logging.warning("found a file that's neither a problem nor a domain file: %s. Ignoring.", fname)
+            logging.warning(
+                "found a file that's neither a problem nor a domain file: %s. Ignoring.", fname
+            )
 
     # now that we've read all the files, match them
     for problem_file in problem_files:
@@ -68,5 +68,7 @@ def read_all_files(d: str) -> Iterator[Tuple[str, Optional[str]]]:
         if domain in domain_map:
             yield problem_file, domain_map[domain]
         else:
-            logging.warning("No domain file found for domain %s (problem file %s)", domain, problem_file)
+            logging.warning(
+                "No domain file found for domain %s (problem file %s)", domain, problem_file
+            )
             yield problem_file, None

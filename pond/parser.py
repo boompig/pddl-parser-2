@@ -139,18 +139,13 @@ class Problem:
 
         # types
         if self.types is not None:
-            s = ("\n" + sp + "  ").join(
-                "%s - %s" % (o, t) for o, t in self.parent_types.items()
-            )
+            s = ("\n" + sp + "  ").join("%s - %s" % (o, t) for o, t in self.parent_types.items())
             fp.write(sp + "(:types %s)%s" % (s, "\n"))
 
         # constants
         if hasattr(self, "const_unmap"):
             s = ("\n" + sp + "  ").join(
-                [
-                    "%s - %s" % (" ".join(self.const_unmap[t]), t)
-                    for t in self.const_unmap
-                ]
+                ["%s - %s" % (" ".join(self.const_unmap[t]), t) for t in self.const_unmap]
             )
             fp.write("%s(:constants\n%s  %s\n%s)\n\n" % (sp, sp, s, sp))
 
@@ -276,9 +271,7 @@ class Problem:
         if ":types" in parse_tree:
             if "-" in parse_tree[":types"].named_children():
                 type_hierarchy = PDDL_Utils.read_type(parse_tree[":types"])
-                self.parent_types = {
-                    subtype: parent for subtype, parent in type_hierarchy
-                }
+                self.parent_types = {subtype: parent for subtype, parent in type_hierarchy}
                 self.types = set(parse_tree[":types"].named_children())
                 self.types.discard("-")
             else:
@@ -297,15 +290,13 @@ class Problem:
         assert self.objects is not None
         const_map = {const: list(self.obj_to_type[const])[0] for const in self.objects}
         self.const_unmap = {
-            t: []
-            for t in set([list(self.obj_to_type[const])[0] for const in self.objects])
+            t: [] for t in set([list(self.obj_to_type[const])[0] for const in self.objects])
         }  # type: dict
         for const in self.objects:
             self.const_unmap[list(self.obj_to_type[const])[0]].append(const)
 
         self.predicates = [
-            self.to_predicate(c, map=const_map)
-            for c in parse_tree[":predicates"].children
+            self.to_predicate(c, map=const_map) for c in parse_tree[":predicates"].children
         ]
 
         # some predicates have this property: they are untyped.
@@ -346,9 +337,12 @@ class Problem:
         """Add the objects to the object set.
         Input:
             object_list:
-                a list of tuples, where the first element is the object name and the second is the object type.
+                a list of tuples, where the first element is the object name and
+                the second is the object type.
+
         Returns:
             nothing
+
         Mutates:
             self.objects
             self.obj_to_type
@@ -407,32 +401,19 @@ class Problem:
         obj_map = {obj: list(self.obj_to_type[obj])[0] for obj in self.objects}
 
         # the goal can be expressed in either a formula form, or a direct form
-        if (
-            len(parse_tree[":goal"].children) == 1
-            and parse_tree[":goal"].children[0].name == "and"
-        ):
+        if len(parse_tree[":goal"].children) == 1 and parse_tree[":goal"].children[0].name == "and":
             self.goal = And(
-                [
-                    Primitive(self.to_fluents(c))
-                    for c in parse_tree[":goal"].children[0].children
-                ]
+                [Primitive(self.to_fluents(c)) for c in parse_tree[":goal"].children[0].children]
             )
         else:
-            self.goal = And(
-                [Primitive(self.to_fluents(c)) for c in parse_tree[":goal"].children]
-            )
+            self.goal = And([Primitive(self.to_fluents(c)) for c in parse_tree[":goal"].children])
 
         # it is critical that the formula here be checked against the objects
-        if (
-            len(parse_tree[":init"].children) == 1
-            and parse_tree[":init"].children[0].name == "and"
-        ):
+        if len(parse_tree[":init"].children) == 1 and parse_tree[":init"].children[0].name == "and":
             self.init = self.to_formula(parse_tree[":init"].children[0], obj_map)
         else:
             # initial condition is one big AND
-            self.init = And(
-                [self.to_formula(c, obj_map) for c in parse_tree[":init"].children]
-            )
+            self.init = And([self.to_formula(c, obj_map) for c in parse_tree[":init"].children])
 
     def to_action(self, node):
         """
@@ -445,9 +426,7 @@ class Problem:
 
         if ":parameters" in node:
             params = PDDL_Utils.read_type(node[":parameters"])
-            parameter_map = {
-                p[0]: p[1] for p in params
-            }  # map of variable-names to types
+            parameter_map = {p[0]: p[1] for p in params}  # map of variable-names to types
         else:
             params = []
 
@@ -460,17 +439,13 @@ class Problem:
             precond = None
 
         if ":observe" in node:
-            assert (
-                len(node[":observe"].children) == 1
-            ), "observe should have one top-level child"
+            assert len(node[":observe"].children) == 1, "observe should have one top-level child"
             observe = self.to_predicate(node[":observe"].children[0], map=parameter_map)
         else:
             observe = None
 
         if ":effect" in node:
-            assert (
-                len(node[":effect"].children) == 1
-            ), "effect should have one top-level child"
+            assert len(node[":effect"].children) == 1, "effect should have one top-level child"
             effect = self.to_formula(node[":effect"].children[0], parameter_map)
         else:
             effect = None
@@ -570,15 +545,11 @@ class Problem:
         elif "xor" == node.name:
             return Xor(args)
         elif "nondet" == node.name:
-            assert (
-                len(node.children) == 1
-            ), "nondet must only have a single child as a predicate"
+            assert len(node.children) == 1, "nondet must only have a single child as a predicate"
             # make p != p2, otherwise might run into issues with mutation in some later step
             return Oneof([args[0], Not(args)])
         elif "unknown" == node.name:
-            assert (
-                len(node.children) == 1
-            ), "unknown must only have a single child as a predicate"
+            assert len(node.children) == 1, "unknown must only have a single child as a predicate"
             # make p != p2, otherwise might run into issues with mutation in some later step
             p = Primitive(self.to_predicate(node.children[0], map=parameter_map))
             p2 = Primitive(self.to_predicate(node.children[0], map=parameter_map))

@@ -175,8 +175,8 @@ class PDDL_Tree:
         while i < len(tokens):
             token = tokens[i]
             if token == "(":
-                # when called, function can expect index to point to token AFTER the open bracket
-                # when returning, caller can expect index to point to token AFTER the closing bracket
+                # when called, function can expect i to point to token AFTER the open bracket
+                # when returning, caller can expect i to point to token AFTER the closing bracket
                 nested_expr, i = PDDL_Tree._tokens_to_nested_list(tokens, i + 1, level + 1)
                 expr.append(nested_expr)
             elif token == ")":
@@ -190,7 +190,6 @@ class PDDL_Tree:
         assert len(expr) == 1, "Should have only one definition per PDDL file"
         assert isinstance(expr[0], list)
         return expr[0], i
-
 
     @staticmethod
     def _get_pddl_list(contents: str) -> list:

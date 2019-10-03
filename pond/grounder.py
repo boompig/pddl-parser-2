@@ -113,21 +113,13 @@ class GroundProblem(Problem):
             return False
 
         if not all(
-            [
-                sa == pa
-                for sa, pa in zip(
-                    sorted(list(self.operators)), sorted(list(p.operators))
-                )
-            ]
+            [sa == pa for sa, pa in zip(sorted(list(self.operators)), sorted(list(p.operators)))]
         ):
             print("operators")
             return False
 
         if not all(
-            [
-                sp == pp
-                for sp, pp in zip(sorted(list(self.fluents)), sorted(list(p.fluents)))
-            ]
+            [sp == pp for sp, pp in zip(sorted(list(self.fluents)), sorted(list(p.fluents)))]
         ):
             print("fluents")
             print("*self*")
@@ -233,8 +225,7 @@ class GroundProblem(Problem):
             for v, t in formula.predicate.args:
                 if v.startswith("?") and v not in assigned:
                     raise KeyError(
-                        "Found unbound variable %s in predicate %s" % v,
-                        str(formula.predicate),
+                        "Found unbound variable %s in predicate %s" % v, str(formula.predicate)
                     )
         else:
             [self._get_unassigned_vars(arg, assigned) for arg in formula.args]
@@ -242,10 +233,12 @@ class GroundProblem(Problem):
     def _create_valuations(self, params: List[tuple], action: Optional[Action] = None):
         """
         Input:
-            params            list of tuples, where the first item is the parameter name, and the second is the parameter type
+            params            list of tuples, where the first item is the parameter name,
+                              and the second is the parameter type
 
         Returns:
-            param_names        list of variable names, corresponding to order that will be returned by generator
+            param_names        list of variable names, corresponding to order that will be
+                               returned by generator
             val_gen            generator of possible valuations
         """
 
@@ -259,15 +252,17 @@ class GroundProblem(Problem):
         possible_values = [d[name] for name in param_names]
         return param_names, itertools.product(*possible_values)
 
-    def _predicate_to_fluent(self, predicate: Optional[Predicate], assignment: dict,
-                             fluent_dict: Optional[dict] = None):
+    def _predicate_to_fluent(
+        self, predicate: Optional[Predicate], assignment: dict, fluent_dict: Optional[dict] = None
+    ):
         """
         Inputs:
             predicate            The predicate to be converted
             assignment            a dictionary mapping each possible variable name to an object
 
         Returns:
-            A fluent that has the particular valuation for the variables as given in input. The old predicate is *untouched*
+            A fluent that has the particular valuation for the variables as given in input.
+            The old predicate is *untouched*
         """
 
         if predicate is None:
@@ -284,9 +279,7 @@ class GroundProblem(Problem):
                 # will assume these are already ground
                 fluent_args.append((var_name, var_type))
             else:
-                raise KeyError(
-                    "Unknown variable %s in predicate %s" % (var_name, str(predicate))
-                )
+                raise KeyError("Unknown variable %s in predicate %s" % (var_name, str(predicate)))
 
         fluent = Predicate(predicate.name, args=None, ground_args=fluent_args)
 
@@ -302,46 +295,36 @@ class GroundProblem(Problem):
             assignment        a dictionary mapping each possible variable name to an object
 
         Returns:
-            A formula that has the particular valuation for the variables as given in input. The old formula is *untouched*
+            A formula that has the particular valuation for the variables as given in input.
+            The old formula is *untouched*
         """
 
         if formula is None:
             return None
 
         if isinstance(formula, Primitive):
-            return Primitive(
-                self._predicate_to_fluent(formula.predicate, assignment, fluent_dict)
-            )
+            return Primitive(self._predicate_to_fluent(formula.predicate, assignment, fluent_dict))
         elif isinstance(formula, Forall):
 
             new_conjuncts = []
             var_names, val_generator = self._create_valuations(formula.params)
             for valuation in val_generator:
-                new_assignment = {
-                    var_name: val for var_name, val in zip(var_names, valuation)
-                }
+                new_assignment = {var_name: val for var_name, val in zip(var_names, valuation)}
                 for k in assignment:
                     new_assignment[k] = assignment[k]
                 new_conjuncts.append(
-                    self._partial_ground_formula(
-                        formula.args[0], new_assignment, fluent_dict
-                    )
+                    self._partial_ground_formula(formula.args[0], new_assignment, fluent_dict)
                 )
             return And(new_conjuncts)
 
         elif isinstance(formula, When):
             return When(
-                self._partial_ground_formula(
-                    formula.condition, assignment, fluent_dict
-                ),
+                self._partial_ground_formula(formula.condition, assignment, fluent_dict),
                 self._partial_ground_formula(formula.result, assignment, fluent_dict),
             )
         else:
             return type(formula)(
-                [
-                    self._partial_ground_formula(arg, assignment, fluent_dict)
-                    for arg in formula.args
-                ]
+                [self._partial_ground_formula(arg, assignment, fluent_dict) for arg in formula.args]
             )
 
     def _action_to_operator(self, action: Action, assignment: dict, fluent_dict: dict):
@@ -362,9 +345,7 @@ class GroundProblem(Problem):
             + "_".join([assignment[var_name] for var_name, _ in action.parameters])
         )
         op_params = [(assignment[var_name], t) for var_name, t in action.parameters]
-        op_precond = self._partial_ground_formula(
-            action.precondition, assignment, fluent_dict
-        )
+        op_precond = self._partial_ground_formula(action.precondition, assignment, fluent_dict)
         op_observe = self._predicate_to_fluent(action.observe, assignment, fluent_dict)
         op_effect = self._partial_ground_formula(action.effect, assignment, fluent_dict)
         return Operator(op_name, op_params, op_precond, op_observe, op_effect)
@@ -379,9 +360,7 @@ class GroundProblem(Problem):
             var_names, val_generator = self._create_valuations(a.parameters, a)
 
             for valuation in val_generator:
-                assignment = {
-                    var_name: val for var_name, val in zip(var_names, valuation)
-                }
+                assignment = {var_name: val for var_name, val in zip(var_names, valuation)}
                 self.operators.add(self._action_to_operator(a, assignment, fluent_dict))
 
     def _create_fluents(self):
@@ -391,9 +370,7 @@ class GroundProblem(Problem):
         for p in self.predicates:
             var_names, val_generator = self._create_valuations(p.args)
             for valuation in val_generator:
-                assignment = {
-                    var_name: val for var_name, val in zip(var_names, valuation)
-                }
+                assignment = {var_name: val for var_name, val in zip(var_names, valuation)}
                 self.fluents.add(self._predicate_to_fluent(p, assignment))
 
     def _get_unground_vars(self, formula, d):
@@ -447,11 +424,7 @@ class GroundProblem(Problem):
         """For verbose printing
         Key results here are the operators and fluents. The rest are as before, I think"""
 
-        d = {
-            "Initial State": self.init,
-            "Operators": self.operators,
-            "Fluents": self.fluents,
-        }
+        d = {"Initial State": self.init, "Operators": self.operators, "Fluents": self.fluents}
 
         for k, v in d.items():
             print("*** %s ***" % k)
@@ -527,9 +500,7 @@ class Operator(Action):
             print(
                 "\t" * (lvl + 1)
                 + "Parameters: "
-                + ", ".join(
-                    [v_type + " " + v_name for v_name, v_type in self.parameters]
-                )
+                + ", ".join([v_type + " " + v_name for v_name, v_type in self.parameters])
             )
         else:
             print("\t" * (lvl + 1) + "Parameters: <none>")
