@@ -72,7 +72,7 @@ class Action:
     def __hash__(self) -> int:
         return hash(self._hash_string())
 
-    def __cmp__(self, a: Action) -> int:
+    def __cmp__(self, a: "Action") -> int:
         if self._hash_string() < a._hash_string():
             return -1
         elif self._hash_string() == a._hash_string():
@@ -88,7 +88,7 @@ class Action:
     def __ne__(self, a: object) -> bool:
         return not (self == a)
 
-    def is_equal(self, a: Action) -> bool:
+    def is_equal(self, a: "Action") -> bool:
         """True iff actions are equal.
         They are equal if the name, precondition, parameters, observe and effects are all equal."""
 

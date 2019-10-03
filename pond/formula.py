@@ -1,29 +1,31 @@
 from .predicate import Predicate
 
+from typing import List, Tuple
 
-class Formula(object):
+
+class Formula:
     """
-        This is an abstract class.
+    This is an abstract class.
 
-        Attributes:
-            args: list of Formula objects
+    Attributes:
+        args: list of Formula objects
 
-        Methods:
-            normalize: restructure the Formula object to be in canonical form:
-                1)  At most one Oneof object should exist,
-                    and be on the outside if it does
+    Methods:
+        normalize: restructure the Formula object to be in canonical form:
+            1)  At most one Oneof object should exist,
+                and be on the outside if it does
 
-                2)  The argument of any Not object should be a
-                    Primitive object
+            2)  The argument of any Not object should be a
+                Primitive object
 
-                3)  An And object should not have any arguments
-                    (directly or indirectly) that are And object
+            3)  An And object should not have any arguments
+                (directly or indirectly) that are And object
 
-                    3b)     There can be more than one And
-                            object if there is a Oneof object
+                3b)     There can be more than one And
+                        object if there is a Oneof object
     """
 
-    def __init__(self, name, args):
+    def __init__(self, name: str, args: List["Formula"]):
         """
             Inputs:
                 name:   Type of formula
@@ -36,7 +38,7 @@ class Formula(object):
         self.name = name
         self.args = args
 
-    def to_ground(self, fluent_dict):
+    def to_ground(self, fluent_dict: dict):
         """Assert that this formula is actually ground.
         Doesn't actually ground the formula, just recursively
         change all args to ground_args.
@@ -45,16 +47,16 @@ class Formula(object):
 
         [arg.to_ground(fluent_dict) for arg in self.args]
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not self.is_equal(f)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def is_equal(self, f):
+    def is_equal(self, f: object) -> bool:
         assert isinstance(
             f, Formula
         ), "comparison must be between formulas, found %s" % str(type(f))
@@ -79,7 +81,7 @@ class Formula(object):
             and all([sa == fa for sa, fa in zip(self.args, f.args)])
         )
 
-    def export(self, lvl=0, sp="  ", untyped=False):
+    def export(self, lvl: int = 0, sp: str = "  ", untyped: bool = False) -> str:
         """Export this formula as a PDDL.
         Overwrite this method by subclasses as needed."""
 
@@ -95,7 +97,7 @@ class Formula(object):
         arg_lines.append(prefix + ")")
         return "\n".join(arg_lines)
 
-    def normalize(self, lvl=0):
+    def normalize(self, lvl: int = 0):
         """
             Return a normalized formula
 
@@ -108,9 +110,9 @@ class Formula(object):
 
         """
 
-        pass
+        raise NotImplementedError()
 
-    def enforce_normalize(self):
+    def enforce_normalize(self) -> None:
         # 1) Verify that Oneof is not nested inside not Oneof
         # 5) Verify that Oneof is not nested under Forall
         if not isinstance(self, Oneof) and any(
@@ -151,7 +153,7 @@ class Formula(object):
 
 
 class Forall(Formula):
-    def __init__(self, params, args):
+    def __init__(self, params: List[Tuple[str, str]], args: List[Formula]):
         """
         Inputs:
             params:     list of tuples.
@@ -165,7 +167,7 @@ class Forall(Formula):
         super(Forall, self).__init__("forall", args)
         self.params = params
 
-    def export(self, lvl, sp, untyped=False):
+    def export(self, lvl: int = 0, sp: str = "  ", untyped: bool = False) -> str:
         """Special export for forall must include
         variable that is quanitified."""
 
@@ -178,13 +180,13 @@ class Forall(Formula):
         s_replace = "forall (%s)" % param_line
         return s.replace("forall", s_replace)
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not self.is_equal(f)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
             String representation for easier debugging.
         """
@@ -194,41 +196,39 @@ class Forall(Formula):
             str(self.args[0]),
         )
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
 
 
 class Or(Formula):
-    def __init__(self, args):
+    def __init__(self, args: List[Formula]):
         """Inputs:
             args:   list of formula objects
         """
 
         super(Or, self).__init__("or", args)
 
-    def __str__(self):
-        """
-            String representation for easier debugging.
-        """
+    def __str__(self) -> str:
+        """String representation for easier debugging."""
 
         return "Or (%s)" % ", ".join([str(arg) for arg in self.args])
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not (self.is_equal(f))
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
 
 
 class And(Formula):
-    def __init__(self, args):
+    def __init__(self, args: List[Formula]):
         """
             Inputs:
                 args:    list of formula objects
@@ -241,17 +241,17 @@ class And(Formula):
 
         super(And, self).__init__("and", args)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
             String representation for easier debugging.
         """
 
         return "And (%s)" % ", ".join([str(arg) for arg in self.args])
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not (self.is_equal(f))
 
     def get_assignments(self, assignments=None):
@@ -259,9 +259,9 @@ class And(Formula):
 
         # each predicate will have its own assignments
         # so the idea is to get at each predicate
-        pass
+        raise NotImplementedError()
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
@@ -273,7 +273,7 @@ class Xor(Formula):
     Xor(Primitive(foo_a_b), Not(Primitive(foo_a_b )))
     """
 
-    def __init__(self, args):
+    def __init__(self, args: List[Formula]):
         """
             Inputs:
                 args:    list of formula objects
@@ -281,20 +281,18 @@ class Xor(Formula):
 
         super(Xor, self).__init__("xor", args)
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not (self == f)
 
-    def __str__(self):
-        """
-            String representation for easier debugging.
-        """
+    def __str__(self) -> str:
+        """String representation for easier debugging."""
 
         return "Xor(%s)" % ", ".join([str(arg) for arg in self.args])
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
@@ -306,7 +304,7 @@ class Not(Formula):
             args: one-item list of Formula objects
     """
 
-    def __init__(self, args):
+    def __init__(self, args: List[Formula]):
         """
             Inputs:
                 args:    list of formula objects
@@ -319,18 +317,18 @@ class Not(Formula):
             % str(args)
         )
 
-    def __eq__(self, f):
+    def __eq__(self, f) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not (self.is_equal(f))
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation for easier debugging."""
 
         return "not(" + str(self.args[0]) + ")"
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
@@ -344,7 +342,7 @@ class When(Formula):
             result
     """
 
-    def __init__(self, condition, result):
+    def __init__(self, condition: Formula, result: Formula):
         """
             Inputs:
                 condition:        the precondition(Formula obj.)
@@ -357,20 +355,20 @@ class When(Formula):
         self.condition = condition
         self.result = result
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not (self.is_equal(f))
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
             String representation for easier debugging.
         """
 
         return "when(%s),(%s)" % (self.condition, self.result)
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
@@ -382,7 +380,7 @@ class Oneof(Formula):
             args:    List of formula objects
     """
 
-    def __init__(self, args):
+    def __init__(self, args: List[Formula]):
         """
             Inputs:
                 args:    list of formula objects
@@ -390,18 +388,18 @@ class Oneof(Formula):
 
         super(Oneof, self).__init__("oneof", args)
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return self.is_equal(f)
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not (self.is_equal(f))
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation for easier debugging."""
 
         return "oneof(%s)" % ", ".join([str(arg) for arg in self.args])
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
@@ -415,7 +413,7 @@ class Primitive(Formula):
             predicate: of the Predicate class
     """
 
-    def __init__(self, predicate):
+    def __init__(self, predicate: Predicate):
         """
             Inputs:
                 predicate:        Predicate object
@@ -427,7 +425,7 @@ class Primitive(Formula):
         super(Primitive, self).__init__("Primitive", [])
         self.predicate = predicate
 
-    def to_ground(self, fluent_dict):
+    def to_ground(self, fluent_dict: dict):
         """Doesn't actually ground, just forces the Primitive
         to accept that it is *already* ground.
 
@@ -442,28 +440,28 @@ class Primitive(Formula):
             print("Did not find %s" % str(self.predicate))
         self.predicate = fluent_dict[hash(self.predicate)]
 
-    def __eq__(self, f):
+    def __eq__(self, f: object) -> bool:
         return isinstance(f, Primitive) and self.predicate == f.predicate
 
-    def __ne__(self, f):
+    def __ne__(self, f: object) -> bool:
         return not (self == f)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
             String representation for easier debugging
         """
 
         return str(self.predicate)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Primitive " + str(self)
 
-    def export(self, lvl, sp, untyped):
+    def export(self, lvl: int = 0, sp: str = "  ", untyped: bool = False):
         """Return PDDL representation of this primitive."""
 
         return self.predicate.export(lvl, sp, untyped)
 
-    def dump(self):
+    def dump(self) -> str:
         """Informative string representation."""
 
         return str(self)
