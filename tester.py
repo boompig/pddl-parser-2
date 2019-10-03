@@ -488,7 +488,8 @@ if __name__ == "__main__":
         parents[parent_name] = os.path.join(here, path)
 
     arg_parser = argparse.ArgumentParser()
-    sp = arg_parser.add_subparsers()
+    sp = arg_parser.add_subparsers(dest="subparser")
+    sp.required = True
 
     ktm = sp.add_parser("ktm", help="Test KTM stuff")
     ktm.add_argument("folder")
