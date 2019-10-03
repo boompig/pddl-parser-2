@@ -441,7 +441,7 @@ class GroundProblem(Problem):
             "Fluents": self.fluents,
         }
 
-        for k, v in d.iteritems():
+        for k, v in d.items():
             print("*** %s ***" % k)
             if k == "Operators":
                 for op in self.operators:
