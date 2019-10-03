@@ -1,30 +1,30 @@
-from .utils import get_contents
-
-# from stdlib
+from typing import List, Iterator
 import re
 
+from .utils import get_contents
 
-class PDDL_Tree(object):
+
+class PDDL_Tree:
     """
-        A node in the PDDL Tree.
-        Also the root node, thus represents the PDDL Tree itself.
+    A node in the PDDL Tree.
+    Also the root node, thus represents the PDDL Tree itself.
     """
 
     # set tab at 4 spaces
     TAB = " " * 4
     EMPTY = "<empty>"
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         """Create a new tree node with given name."""
 
         self.name = name
-        self.children = []
+        self.children = []  # type: List[PDDL_Tree]
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: str) -> "PDDL_Tree":
         """
-            Allow retrieval of children based on name.
-            Throw an error if nothing found
-            No speedup, just convenient interface.
+        Allow retrieval of children based on name.
+        Throw an error if nothing found
+        No speedup, just convenient interface.
         """
 
         for c in self.children:
@@ -33,30 +33,30 @@ class PDDL_Tree(object):
 
         raise KeyError("No subtree with name %s found in this tree" % k)
 
-    def __contains__(self, k):
+    def __contains__(self, k: str) -> bool:
         """Allow membership checking of named subtree k. For convenience, no actual speedup."""
 
         return k in self.named_children()
 
-    def find_all(self, k):
+    def find_all(self, k: str) -> Iterator["PDDL_Tree"]:
         """
-            Find all children of this node with name k
-            Return as a generator
+        Find all children of this node with name k
+        Return as a generator
         """
 
         for c in self.children:
             if c.name == k:
                 yield c
 
-    def named_children(self):
+    def named_children(self) -> List[str]:
         """
-            Return a list of the names of this node's children.
-            Particularly useful if the children are all leaves.
+        Return a list of the names of this node's children.
+        Particularly useful if the children are all leaves.
         """
 
         return [c.name for c in self.children]
 
-    def add_child(self, child):
+    def add_child(self, child: "PDDL_Tree"):
         """Add the given child to the end of the list of children."""
 
         self.children.append(child)
@@ -66,7 +66,7 @@ class PDDL_Tree(object):
 
         return self.print_tree()
 
-    def print_tree(self, lvl=0):
+    def print_tree(self, lvl: int = 0):
         """Print the entire tree to the console."""
 
         print(PDDL_Tree.TAB * lvl + str(self.name))
@@ -90,7 +90,7 @@ class PDDL_Tree(object):
         return self.name == PDDL_Tree.EMPTY
 
     @staticmethod
-    def create(fname):
+    def create(fname: str) -> "PDDL_Tree":
         """Create a PDDL Tree out of the given PDDL file."""
 
         pddl_list = PDDL_Tree._get_pddl_list(get_contents(fname))
@@ -99,7 +99,7 @@ class PDDL_Tree(object):
         return pddl_tree
 
     @staticmethod
-    def _alter_tree(root):
+    def _alter_tree(root: "PDDL_Tree"):
         """Alter tree to get correct semantic structure."""
 
         alter_set = set([":precondition", ":effect", ":observe"])
@@ -126,8 +126,8 @@ class PDDL_Tree(object):
     @staticmethod
     def _make_tree(pddl_list):
         """
-            Make a tree out of a PDDL list.
-            Meant to be called internally
+        Make a tree out of a PDDL list.
+        Meant to be called internally
         """
 
         root = PDDL_Tree(pddl_list[0])
@@ -147,8 +147,8 @@ class PDDL_Tree(object):
     @staticmethod
     def _get_pddl_list(contents):
         """
-            Given the contents of a PDDL file, return a list of correctly nested lists.
-            This is also the pre-processing step.
+        Given the contents of a PDDL file, return a list of correctly nested lists.
+        This is also the pre-processing step.
         """
 
         contents = re.sub(r"\s+", " ", contents.replace("(", "[").replace(")", "]"))

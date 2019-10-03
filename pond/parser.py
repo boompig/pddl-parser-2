@@ -40,7 +40,7 @@ class Problem:
         export:  Save this problem into 2 PDDL files
     """
 
-    OBJECT = "default_objec"
+    OBJECT = "default_object"
 
     def __init__(self, domain_file: str, problem_file: Optional[str] = None):
         """
@@ -257,7 +257,7 @@ class Problem:
                 print("\t" + str(v))
             print("")
 
-    def _parse_domain(self, f_domain):
+    def _parse_domain(self, f_domain: str):
         """
         Extract information from the domain file.
 
@@ -294,11 +294,12 @@ class Problem:
             self._add_objects(object_list)
 
         # TODO this may not be correct, depending on the type hierchy
+        assert self.objects is not None
         const_map = {const: list(self.obj_to_type[const])[0] for const in self.objects}
         self.const_unmap = {
             t: []
             for t in set([list(self.obj_to_type[const])[0] for const in self.objects])
-        }
+        }  # type: dict
         for const in self.objects:
             self.const_unmap[list(self.obj_to_type[const])[0]].append(const)
 

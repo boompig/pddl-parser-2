@@ -1,7 +1,7 @@
 from .predicate import Predicate
 
 """
-    General purpose utilities
+General purpose utilities
 """
 
 import re
@@ -9,8 +9,8 @@ import re
 
 def get_contents(fname):
     """
-        Return the contents of the given file.
-        Strip comments (lines starting with ;)
+    Return the contents of the given file.
+    Strip comments (lines starting with ;)
     """
 
     fp = open(fname, "r")
