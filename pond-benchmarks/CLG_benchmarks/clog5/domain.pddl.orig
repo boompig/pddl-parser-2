@@ -1,5 +1,5 @@
 
-(define (domain logistics_conf)
+(define (domain logistics_cont)
   (:types OBJ TRUCK LOCATION AIRPLANE CITY AIRPORT )
   (:predicates 	(at_tl ?obj - TRUCK  ?loc - LOCATION)
 		(at_ta ?obj - TRUCK  ?loc - AIRPORT)

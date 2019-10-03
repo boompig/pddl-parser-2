@@ -5,6 +5,7 @@ import tempfile
 from typing import Callable, Optional
 
 from pond import grounder, parser
+from pond.pddl_tree import PDDL_Tree
 
 
 def get_files(d: str) -> tuple:
@@ -438,9 +439,7 @@ def ground_problem(folder: str, domain_name: str, silent: bool = False):
 def make_tree(fname: str):
     """Create a tree out of the given PDDL file."""
 
-    from pond import pddl_tree
-
-    tree = pddl_tree.PDDL_Tree.create(fname)
+    tree = PDDL_Tree.create(fname)
     tree.print_tree()
 
 
