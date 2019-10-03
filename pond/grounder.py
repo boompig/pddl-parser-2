@@ -1,15 +1,17 @@
-from .parser import Problem
-from .action import Action
-from .formula import Primitive, Forall, When, And
-from .predicate import Predicate
 import itertools
+from typing import Set, List, Optional
+
+from .action import Action
+from .formula import And, Forall, Formula, Primitive, When
+from .parser import Problem
+from .predicate import Predicate
 
 
 class GroundProblem(Problem):
     """
     Inherits from Problem.
-    Houses the basic data structures for a contingent planning problem that has 
-    been grounded. It will contain all of the attributes and functionality of the 
+    Houses the basic data structures for a contingent planning problem that has
+    been grounded. It will contain all of the attributes and functionality of the
     parent class, Problem.
 
     Inputs:
@@ -30,7 +32,7 @@ class GroundProblem(Problem):
         none
     """
 
-    def __init__(self, domain_file, problem_file, no_ground=False):
+    def __init__(self, domain_file: str, problem_file: str, no_ground: bool = False):
         """Create a new instance of GroundProblem.
         Inputs:
             domain_file:    The location of the PDDL domain on disk
@@ -46,15 +48,17 @@ class GroundProblem(Problem):
 
         if no_ground:
             # create fluents
-            self.fluents = set([])
+            self.fluents = set([])  # type: Set[Predicate]
             fluent_dict = {}
+            assert self.predicates is not None
             for p in self.predicates:
                 f = Predicate(p.name, None, p.args)
                 fluent_dict[hash(f)] = f
                 self.fluents.add(f)
 
             # create operators by changing all the formulas
-            self.operators = set([])
+            self.operators = set([])  # type: Set[Operator]
+            assert self.actions is not None
             for a in self.actions:
                 # parameters stay the same
                 param = a.parameters
@@ -78,6 +82,7 @@ class GroundProblem(Problem):
                 op = Operator(a.name, param, precond, observe, effect)
                 self.operators.add(op)
 
+            assert self.init is not None
             self.init.to_ground(fluent_dict)
         else:
             self._ground()
@@ -90,7 +95,7 @@ class GroundProblem(Problem):
 
         return self.init.get_assignments()
 
-    def is_equal(self, p):
+    def is_equal(self, p: "GroundProblem") -> bool:
         """Return True iff this ground problem is equivalent to given ground problem.
         Here, we don't care about underlying lifted representation."""
 
@@ -137,7 +142,7 @@ class GroundProblem(Problem):
 
         return True
 
-    def _export_domain(self, fp, sp="  "):
+    def _export_domain(self, fp, sp: str = "  "):
         """Write domain PDDL to given file."""
 
         fp.write("(define" + "\n")
@@ -147,6 +152,7 @@ class GroundProblem(Problem):
         fp.write("(domain %s)%s" % (self.domain_name, "\n"))
 
         # requirements
+        assert self.types is not None
         if len(self.types) > 1 or list(self.types)[0] != Predicate.OBJECT:
             fp.write(sp + "(:requirements :strips :typing)\n")
         else:
@@ -169,7 +175,7 @@ class GroundProblem(Problem):
 
         fp.write(")")  # close define
 
-    def export(self, f_domain, f_problem):
+    def export(self, f_domain: str, f_problem: str):
         """Write out the problem in PDDL.
         Export operators instead of actions.
         Export fluents instead of predicates."""
@@ -185,7 +191,7 @@ class GroundProblem(Problem):
             self._export_problem(fp, sp)
             fp.close()
 
-    def _create_param_dict(self, params):
+    def _create_param_dict(self, params: List[tuple]):
         """
         Input:
             params:     list of tuples, where the first item is the parameter name,
@@ -197,6 +203,7 @@ class GroundProblem(Problem):
 
         d = {}
 
+        assert self.objects is not None
         for param_name, param_type in params:
             if param_type in self.type_to_obj:
                 d[param_name] = self.type_to_obj[param_type]
@@ -211,8 +218,9 @@ class GroundProblem(Problem):
 
         return d
 
-    def _get_unassigned_vars(self, formula, assigned):
-        """Augment the dictionary in assigned with unassigned vars"""
+    def _get_unassigned_vars(self, formula: Formula, assigned: dict):
+        """Augment the dictionary in assigned with unassigned vars
+        Don't return anything"""
 
         # if isinstance(formula, Forall):
         #    try:
@@ -231,7 +239,7 @@ class GroundProblem(Problem):
         else:
             [self._get_unassigned_vars(arg, assigned) for arg in formula.args]
 
-    def _create_valuations(self, params, action=None):
+    def _create_valuations(self, params: List[tuple], action: Optional[Action] = None):
         """
         Input:
             params            list of tuples, where the first item is the parameter name, and the second is the parameter type
@@ -251,7 +259,8 @@ class GroundProblem(Problem):
         possible_values = [d[name] for name in param_names]
         return param_names, itertools.product(*possible_values)
 
-    def _predicate_to_fluent(self, predicate, assignment, fluent_dict={}):
+    def _predicate_to_fluent(self, predicate: Optional[Predicate], assignment: dict,
+                             fluent_dict: Optional[dict] = None):
         """
         Inputs:
             predicate            The predicate to be converted
@@ -263,6 +272,9 @@ class GroundProblem(Problem):
 
         if predicate is None:
             return None
+
+        if fluent_dict is None:
+            fluent_dict = {}
 
         fluent_args = []
         for var_name, var_type in predicate.args:
@@ -332,7 +344,7 @@ class GroundProblem(Problem):
                 ]
             )
 
-    def _action_to_operator(self, action, assignment, fluent_dict):
+    def _action_to_operator(self, action: Action, assignment: dict, fluent_dict: dict):
         """
         Inputs:
             action            The action to be converted
@@ -460,8 +472,8 @@ class Operator(Action):
     Data structure to contain ground action from the problem.
 
     Attributes:
-        The attributes should be exactly the same as for an Action object, with 
-        the exception that every instance of a Predicate object is actually a 
+        The attributes should be exactly the same as for an Action object, with
+        the exception that every instance of a Predicate object is actually a
         Fluent object (i.e., everything is assumed to be ground).
 
     Methods:

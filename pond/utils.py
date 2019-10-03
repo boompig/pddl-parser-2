@@ -7,7 +7,7 @@ General purpose utilities
 import re
 
 
-def get_contents(fname):
+def get_contents(fname: str) -> str:
     """
     Return the contents of the given file.
     Strip comments (lines starting with ;)
@@ -19,7 +19,7 @@ def get_contents(fname):
     return re.sub(r"\s*;(.*?)\n", "\n", contents).strip()
 
 
-class PDDL_Utils(object):
+class PDDL_Utils:
     """
     Collection of general-purpose utilities used for parsing PDDL files.
     """

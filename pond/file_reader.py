@@ -1,5 +1,6 @@
 """
-This is a utility to more easily read any directories containing a mix of PDDL problem and domain files
+This is a utility to more easily read any directories
+containing a mix of PDDL problem and domain files
 """
 
 import logging

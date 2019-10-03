@@ -1,7 +1,10 @@
-from typing import List, Iterator
-import re
+from typing import List, Iterator, Tuple, Union
 
 from .utils import get_contents
+
+
+class TreeParseError(Exception):
+    pass
 
 
 class PDDL_Tree:
@@ -145,41 +148,60 @@ class PDDL_Tree:
         return root
 
     @staticmethod
-    def _get_pddl_list(contents):
+    def _tokenize_pddl(contents: str) -> Iterator[str]:
+        """
+        Generator over the tokens
+        Tokenize PDDL file. Single linear pass over contents
+        """
+        last_token = ""
+        for c in contents:
+            if c in [" ", "\n", "\t"]:
+                if last_token:
+                    yield last_token
+                last_token = ""
+            elif c in ["(", ")"]:
+                if last_token:
+                    yield last_token
+                yield c
+                last_token = ""
+            else:
+                last_token += c
+
+    @staticmethod
+    def _tokens_to_nested_list(tokens: List[str], i: int = 0, level: int = 0) -> Tuple[list, int]:
+        """Convert the tokens into a nested list of expressions
+        Single linear pass over tokens"""
+        expr = []  # type: List[Union[str, list]]
+        while i < len(tokens):
+            token = tokens[i]
+            if token == "(":
+                # when called, function can expect index to point to token AFTER the open bracket
+                # when returning, caller can expect index to point to token AFTER the closing bracket
+                nested_expr, i = PDDL_Tree._tokens_to_nested_list(tokens, i + 1, level + 1)
+                expr.append(nested_expr)
+            elif token == ")":
+                # i refers to the index AFTER the closing bracket
+                return expr, i + 1
+            else:
+                expr.append(token)
+                i += 1
+
+        assert level == 0, "Error: parens are not balanced in PDDL file"
+        assert len(expr) == 1, "Should have only one definition per PDDL file"
+        assert isinstance(expr[0], list)
+        return expr[0], i
+
+
+    @staticmethod
+    def _get_pddl_list(contents: str) -> list:
         """
         Given the contents of a PDDL file, return a list of correctly nested lists.
+        Each item is either a string or a list
+
         This is also the pre-processing step.
+
+        PDDL files use a Lisp-like bracketing notation that makes them rather easy to parse
         """
-
-        contents = re.sub(r"\s+", " ", contents.replace("(", "[").replace(")", "]"))
-
-        # do tricky things with brackets by hand
-        l = list(contents)
-        i = 0
-
-        while i < len(l) - 1:
-            if l[i] == "[" and l[i + 1] == " ":
-                l.pop(i + 1)
-            elif l[i] == " " and l[i + 1] == "]":
-                l.pop(i)
-                i -= 1
-            elif (l[i] == "]" and l[i + 1] == "[") or (
-                l[i] not in ["[", "]", " "] and l[i + 1] == "["
-            ):
-                # cases for adding spaces:
-                # between successive close-open brackets
-                # between the ending of non-space non-bracket char and open bracket
-                l.insert(i + 1, " ")
-            i += 1
-
-        contents = "".join(l)
-
-        contents = contents.replace(" ", ",")
-
-        # the expression in first bracket defines what is allowed to be the name of a predicate, and what is not
-        contents = re.sub(r"([^,\[\]]+)", r"'\1'", contents)
-
-        # for easier debugging, put on different lines
-        contents = contents.replace(",", ",\n")
-        # print contents
-        return eval(contents)
+        tokens = [token for token in PDDL_Tree._tokenize_pddl(contents)]
+        expr, _ = PDDL_Tree._tokens_to_nested_list(tokens)
+        return expr
